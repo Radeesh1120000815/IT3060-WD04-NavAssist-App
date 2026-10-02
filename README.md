@@ -1,17 +1,31 @@
-# it3060_wd04_navassist_app
+# NavAssist — Navigation Assistant App for Visually Impaired Pedestrians
 
-A new Flutter project.
+IT3060 Human Computer Interaction — Milestone 03
+Group WD_04
 
-## Getting Started
+## Tech Stack
 
-This project is a starting point for a Flutter application.
+- Flutter (Dart)
+- Firebase (Firestore + Authentication)
+- Packages: flutter_tts, speech_to_text, vibration, go_router, provider
 
-A few resources to get you started if this is your first Flutter project:
+## Setup
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+1. Install Flutter SDK: https://docs.flutter.dev/get-started/install
+2. Clone this repo
+3. Run `flutter pub get`
+4. Add the `google-services.json` file (shared with the team separately) to `android/app/`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Firebase
+
+This project uses a shared Firebase project called `navassist-app`. The config file `google-services.json` is not included in this repo (it's gitignored for security) — it was shared directly with group members. If you need access to the Firebase console itself, ask to be added as a project member.
+
+## Run
+
+flutter run
+
+## Build APK
+
+flutter build apk --release
+
+Output: `build/app/outputs/flutter-apk/app-release.apk`
