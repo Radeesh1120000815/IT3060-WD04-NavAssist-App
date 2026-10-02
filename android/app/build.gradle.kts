@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.it3060_wd04_navassist_app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
