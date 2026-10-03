@@ -54,84 +54,95 @@ class _HighAlert extends StatelessWidget {
         ? 'Strong vibration until you dismiss'
         : 'Vibration is turned off';
 
+    // The phone's Back button / gesture works like Dismiss. Without this,
+    // Back would close the screen BEHIND the alert. Returning true means
+    // "handled", so nothing else is popped.
     // BlockSemantics hides the screen underneath from TalkBack, and
     // scopesRoute makes TalkBack treat this like a new page.
-    return BlockSemantics(
-      child: Semantics(
-        scopesRoute: true,
-        namesRoute: true,
-        explicitChildNodes: true,
-        label: 'Warning',
-        child: SizedBox.expand(
-          child: Material(
-            color: p.background,
-            child: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Semantics(
-                      liveRegion: settings.screenReaderSupport,
-                      container: true,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 32,
-                        ),
-                        decoration: BoxDecoration(
-                          color: p.dangerSurface,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: p.danger, width: 3),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.warning_amber_rounded,
-                              size: 72,
-                              color: p.danger,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'WARNING',
-                              style: text.titleMedium?.copyWith(
+    return BackButtonListener(
+      onBackButtonPressed: () async {
+        await context.read<AlertService>().acknowledge();
+        return true;
+      },
+      child: BlockSemantics(
+        child: Semantics(
+          scopesRoute: true,
+          namesRoute: true,
+          explicitChildNodes: true,
+          label: 'Warning',
+          child: SizedBox.expand(
+            child: Material(
+              color: p.background,
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Semantics(
+                        liveRegion: settings.screenReaderSupport,
+                        container: true,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 32,
+                          ),
+                          decoration: BoxDecoration(
+                            color: p.dangerSurface,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: p.danger, width: 3),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                size: 72,
                                 color: p.danger,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 2,
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              alert.message.toUpperCase(),
-                              textAlign: TextAlign.center,
-                              style: text.headlineMedium?.copyWith(
-                                color: p.danger,
-                                fontWeight: FontWeight.w800,
+                              const SizedBox(height: 8),
+                              Text(
+                                'WARNING',
+                                style: text.titleMedium?.copyWith(
+                                  color: p.danger,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 2,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              vibrationNote,
-                              textAlign: TextAlign.center,
-                              style: text.bodyLarge?.copyWith(color: p.danger),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              Text(
+                                alert.message.toUpperCase(),
+                                textAlign: TextAlign.center,
+                                style: text.headlineMedium?.copyWith(
+                                  color: p.danger,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                vibrationNote,
+                                textAlign: TextAlign.center,
+                                style: text.bodyLarge?.copyWith(
+                                  color: p.danger,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    FilledButton.icon(
-                      onPressed: () =>
-                          context.read<AlertService>().acknowledge(),
-                      icon: const Icon(Icons.check),
-                      label: const Text('Dismiss alert'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: p.danger,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(48, 64),
+                      const SizedBox(height: 20),
+                      FilledButton.icon(
+                        onPressed: () =>
+                            context.read<AlertService>().acknowledge(),
+                        icon: const Icon(Icons.check),
+                        label: const Text('Dismiss alert'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: p.danger,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(48, 64),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

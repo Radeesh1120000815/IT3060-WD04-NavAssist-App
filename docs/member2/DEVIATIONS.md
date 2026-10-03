@@ -19,6 +19,15 @@ The wireframes show old FR/NFR requirement IDs. The code and these notes use onl
 | G6 | Large text, High contrast and Reduce motion change **my screens only** (through `VoiceAccessibilityScope` in `voice_shell.dart`). The Large text subtitle now says "on the navigation and voice screens" instead of "throughout the app". | Applying them to the whole app needs a change to the shared `main.dart`. The subtitle was changed so it does not promise something that is not true. |
 | G7 | Every screen has a TalkBack label on each button and icon, touch targets of at least 48 × 48, and text that grows with the phone's text size. Selected options are shown by fill and bold text (and a tick where there is room), not by colour only. | Accessibility requirement UR-04. |
 
+## Navigation between my screens
+
+| # | What changed | Why |
+|---|---|---|
+| N1 | Every screen except Active Navigation **always** shows "< Back". If there is a screen underneath, Back goes to it. If the screen was opened directly (e.g. with `context.go` or a deep link), Back goes to Active Navigation (`/navigate`). | The hi-fi shows Back on every settings screen. Without the fallback, a screen opened directly had no way back. |
+| N2 | While a **high** alert is showing, the phone's Back button or gesture works like **Dismiss**: it closes the alert and you stay on the same screen. | Without this, Back closed the screen *behind* the alert, so Dismiss did not return to the screen you were on. |
+| N3 | After the "settings" voice command, Voice Command pauses listening while Accessibility is open and **listens again** when you come back. | Before, it came back showing "Not listening". |
+| N4 | The demo alerts on Active Navigation come from the **demo route steps**: press Next step to reach step 2 (low hazard banner) and step 4 (high obstacle alert). Separate "Test high alert" / "Test low alert" buttons are on the Haptic Alerts screen (H2). Active Navigation has no extra "simulate" buttons. | The demo steps already fire both alert types. Adding more buttons would crowd the navigation screen. |
+
 ## Active Navigation (`active_navigation.png`)
 
 | # | What changed | Why |

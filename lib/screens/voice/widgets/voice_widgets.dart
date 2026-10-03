@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../data/haptic_cue.dart';
 import '../theme/voice_theme.dart';
+import '../voice_routes.dart';
 
 // Small building blocks used by all Member 2 screens.
 
@@ -91,16 +92,19 @@ class VoiceHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (context.canPop())
-          TextButton.icon(
-            onPressed: () => context.pop(),
-            icon: const Icon(Icons.chevron_left),
-            label: const Text('Back'),
-            style: TextButton.styleFrom(
-              foregroundColor: p.mutedText,
-              padding: const EdgeInsets.only(right: 12),
-            ),
+        // Back always works: pop to the previous screen, or, if this screen
+        // was opened directly (nothing underneath), go to Active Navigation.
+        TextButton.icon(
+          onPressed: () => context.canPop()
+              ? context.pop()
+              : context.go(VoiceRoutes.activeNavigation),
+          icon: const Icon(Icons.chevron_left),
+          label: const Text('Back'),
+          style: TextButton.styleFrom(
+            foregroundColor: p.mutedText,
+            padding: const EdgeInsets.only(right: 12),
           ),
+        ),
         const SizedBox(height: 4),
         Semantics(
           header: true,

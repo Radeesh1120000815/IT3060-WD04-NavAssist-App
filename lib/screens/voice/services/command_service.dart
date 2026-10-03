@@ -70,6 +70,10 @@ class CommandService extends ChangeNotifier {
   /// A simple message to show or speak, or null.
   String? get errorMessage => _errorMessage;
 
+  /// True while the Voice Command screen keeps listening (restarts after
+  /// each pause). False for a single long-press session.
+  bool get isKeepingListening => _keepListening;
+
   /// True if the current listening session needs the wake phrase first.
   bool get needsWakePhrase => _sessionNeedsWake;
 

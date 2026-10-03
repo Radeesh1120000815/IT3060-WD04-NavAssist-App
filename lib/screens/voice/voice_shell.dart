@@ -69,13 +69,22 @@ class _VoiceShellState extends State<VoiceShell> {
       case CommandAction.next:
         _session.next();
       case CommandAction.settings:
-        // Stop listening first: the Voice Command screen is now covered.
-        _commands.stopListening();
-        GoRouter.of(context).push(VoiceRoutes.accessibility);
+        _openSettingsFromVoice();
       case CommandAction.stop:
         _voice.stop();
         _haptic.stop();
     }
+  }
+
+  // "settings" command: pause listening while Accessibility is open, then
+  // listen again when the user comes back to the Voice Command screen.
+  Future<void> _openSettingsFromVoice() async {
+    final wasListening = _commands.isKeepingListening;
+    await _commands.stopListening();
+    if (!mounted) return;
+    // push() finishes when the Accessibility screen is closed.
+    await GoRouter.of(context).push(VoiceRoutes.accessibility);
+    if (mounted && wasListening) await _commands.startListening();
   }
 
   @override
