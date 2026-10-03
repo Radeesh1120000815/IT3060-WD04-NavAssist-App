@@ -640,17 +640,26 @@ class _QuickButtons extends StatelessWidget {
     ];
 
     // Four in a row; two per row when the text is very large.
-    final columns = MediaQuery.textScalerOf(context).scale(1) > 1.3 ? 2 : 4;
+    // Plain Rows, NOT a LayoutBuilder: this panel sits in a
+    // SliverFillRemaining, which first asks for its child's height, and a
+    // LayoutBuilder cannot answer that (bug found on the phone).
+    final perRow = MediaQuery.textScalerOf(context).scale(1) > 1.3 ? 2 : 4;
     const gap = 10.0;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          children: [for (final b in buttons) SizedBox(width: width, child: b)],
-        );
-      },
+    return Column(
+      children: [
+        for (var start = 0; start < buttons.length; start += perRow) ...[
+          if (start > 0) const SizedBox(height: gap),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var i = start; i < start + perRow; i++) ...[
+                if (i > start) const SizedBox(width: gap),
+                Expanded(child: buttons[i]),
+              ],
+            ],
+          ),
+        ],
+      ],
     );
   }
 }

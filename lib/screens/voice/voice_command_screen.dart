@@ -41,23 +41,38 @@ class _VoiceCommandScreenState extends State<VoiceCommandScreen> {
   late final VoiceRepository _repository;
   late final Stream<List<CustomCommand>> _customCommands;
   late final TextEditingController _wakeController;
+  late final VoiceSettingsProvider _settingsProvider;
+  late String _shownWakePhrase; // the saved phrase last put in the text box
 
   @override
   void initState() {
     super.initState();
-    final provider = context.read<VoiceSettingsProvider>();
+    _settingsProvider = context.read<VoiceSettingsProvider>();
     _commands = context.read<CommandService>();
-    _repository = provider.repository;
+    _repository = _settingsProvider.repository;
     _customCommands = _repository.watchCustomCommands();
-    _wakeController = TextEditingController(text: provider.settings.wakePhrase);
+    _shownWakePhrase = _settingsProvider.settings.wakePhrase;
+    _wakeController = TextEditingController(text: _shownWakePhrase);
+    _settingsProvider.addListener(_syncWakePhrase);
     _startListening();
   }
 
   @override
   void dispose() {
     _commands.stopListening(); // only listen while this screen is open
+    _settingsProvider.removeListener(_syncWakePhrase);
     _wakeController.dispose();
     super.dispose();
+  }
+
+  // Puts the saved wake phrase in the text box when it changes somewhere
+  // else (settings finished loading, or Reset to default). Without this the
+  // box could show an old phrase, and pressing Save would bring it back.
+  void _syncWakePhrase() {
+    final saved = _settingsProvider.settings.wakePhrase;
+    if (saved == _shownWakePhrase) return;
+    _shownWakePhrase = saved;
+    _wakeController.text = saved;
   }
 
   Future<void> _startListening() async {
@@ -506,8 +521,9 @@ class _CommandTile extends StatelessWidget {
                   ],
                 ),
               ),
+              // The Switch itself tells TalkBack whether it is on or off.
               Semantics(
-                label: 'Command "${command.phrase}" on',
+                label: 'Use command "${command.phrase}"',
                 child: Switch(value: command.enabled, onChanged: onToggle),
               ),
               IconButton(
