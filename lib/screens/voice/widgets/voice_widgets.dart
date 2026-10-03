@@ -324,25 +324,46 @@ class NoteText extends StatelessWidget {
 }
 
 /// Shows a live Firestore list with loading, error and empty messages.
-/// The parent must create [stream] once (in initState), not in build.
-class StreamList<T> extends StatelessWidget {
+///
+/// It is given a FUNCTION that makes the stream ([createStream]), not the
+/// stream itself. Our repository streams can only be listened to once, and
+/// a ListView throws this widget away when it scrolls far off screen, then
+/// builds it again. A new copy must start a new stream; reusing the old one
+/// gives "Bad state: Stream has already been listened to" (bug found on the
+/// phone). The stream is made once in initState, never in build, so a
+/// normal rebuild does not restart it.
+class StreamList<T> extends StatefulWidget {
   const StreamList({
     super.key,
-    required this.stream,
+    required this.createStream,
     required this.emptyText,
     required this.itemBuilder,
     this.maxItems,
   });
 
-  final Stream<List<T>> stream;
+  final Stream<List<T>> Function() createStream;
   final String emptyText;
   final Widget Function(BuildContext context, T item) itemBuilder;
   final int? maxItems;
 
   @override
+  State<StreamList<T>> createState() => _StreamListState<T>();
+}
+
+class _StreamListState<T> extends State<StreamList<T>> {
+  late final Stream<List<T>> _stream;
+
+  @override
+  void initState() {
+    super.initState();
+    _stream = widget.createStream(); // one new stream for this copy
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final maxItems = widget.maxItems;
     return StreamBuilder<List<T>>(
-      stream: stream,
+      stream: _stream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return NoteText('${snapshot.error}', icon: Icons.error_outline);
@@ -350,10 +371,12 @@ class StreamList<T> extends StatelessWidget {
         if (!snapshot.hasData) return const NoteText('Loading…');
 
         var items = snapshot.data!;
-        if (maxItems != null) items = items.take(maxItems!).toList();
-        if (items.isEmpty) return NoteText(emptyText);
+        if (maxItems != null) items = items.take(maxItems).toList();
+        if (items.isEmpty) return NoteText(widget.emptyText);
         return Column(
-          children: [for (final item in items) itemBuilder(context, item)],
+          children: [
+            for (final item in items) widget.itemBuilder(context, item),
+          ],
         );
       },
     );
@@ -393,7 +416,7 @@ class PatternGlyph extends StatelessWidget {
 
 /// PLACEHOLDER for the shared bottom tab bar (Home, Active Nav, Nearby,
 /// Hazards, SOS). It belongs to the shared layout, which does not exist
-/// yet. Delete this when the real tab bar is added.
+/// yet. Shown only in voice_dev_main.dart (VoiceShell.showTabBarPlaceholder).
 class TabBarPlaceholder extends StatelessWidget {
   const TabBarPlaceholder({super.key});
 

@@ -30,6 +30,11 @@ class VoiceShell extends StatefulWidget {
   /// The current screen, given by GoRouter.
   final Widget child;
 
+  /// Show the "Tab bar placeholder" at the bottom? Only voice_dev_main.dart
+  /// turns this on. In the shared app it stays off, so it never doubles up
+  /// with my teammate's real tab bar.
+  static bool showTabBarPlaceholder = false;
+
   @override
   State<VoiceShell> createState() => _VoiceShellState();
 }
@@ -114,7 +119,9 @@ class _VoiceShellState extends State<VoiceShell> {
         child: ScaffoldMessenger(
           child: Scaffold(
             body: Stack(children: [widget.child, const AlertOverlay()]),
-            bottomNavigationBar: const TabBarPlaceholder(),
+            bottomNavigationBar: VoiceShell.showTabBarPlaceholder
+                ? const TabBarPlaceholder()
+                : null,
           ),
         ),
       ),

@@ -28,14 +28,12 @@ class InstructionFeedbackScreen extends StatefulWidget {
 
 class _InstructionFeedbackScreenState extends State<InstructionFeedbackScreen> {
   late final VoiceRepository _repository;
-  late final Stream<List<InstructionFeedback>> _history;
   FeedbackStatus _status = FeedbackStatus.onTrack;
 
   @override
   void initState() {
     super.initState();
     _repository = context.read<VoiceSettingsProvider>().repository;
-    _history = _repository.watchFeedback();
     // Play the confirmation when the screen opens.
     WidgetsBinding.instance.addPostFrameCallback((_) => _playConfirmation());
   }
@@ -204,7 +202,7 @@ class _InstructionFeedbackScreenState extends State<InstructionFeedbackScreen> {
             ),
             const SectionTitle('Recent feedback'),
             StreamList<InstructionFeedback>(
-              stream: _history,
+              createStream: _repository.watchFeedback,
               maxItems: 5,
               emptyText: 'No feedback yet.',
               itemBuilder: (context, item) => _FeedbackTile(

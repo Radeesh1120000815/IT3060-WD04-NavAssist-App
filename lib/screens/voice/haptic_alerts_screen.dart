@@ -26,17 +26,12 @@ class HapticAlertsScreen extends StatefulWidget {
 }
 
 class _HapticAlertsScreenState extends State<HapticAlertsScreen> {
-  late final Stream<List<AlertLogEntry>> _alertLog;
   late final Future<bool> _canVibrate;
   HapticCue _selected = HapticCue.turnLeft;
 
   @override
   void initState() {
     super.initState();
-    _alertLog = context
-        .read<VoiceSettingsProvider>()
-        .repository
-        .watchAlertLog();
     _canVibrate = context.read<HapticService>().isAvailable();
   }
 
@@ -177,7 +172,7 @@ class _HapticAlertsScreenState extends State<HapticAlertsScreen> {
             ),
             const SizedBox(height: 8),
             StreamList<AlertLogEntry>(
-              stream: _alertLog,
+              createStream: provider.repository.watchAlertLog,
               maxItems: 20,
               emptyText: 'No alerts yet.',
               itemBuilder: (context, entry) => _AlertLogTile(entry: entry),

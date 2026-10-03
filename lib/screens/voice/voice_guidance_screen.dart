@@ -22,20 +22,9 @@ class VoiceGuidanceScreen extends StatefulWidget {
 }
 
 class _VoiceGuidanceScreenState extends State<VoiceGuidanceScreen> {
-  late final Stream<List<InstructionHistoryEntry>> _history;
-
   // Volume while the slider is being dragged; saved when the drag ends,
   // so Firestore gets one write instead of one per pixel.
   double? _dragVolume;
-
-  @override
-  void initState() {
-    super.initState();
-    _history = context
-        .read<VoiceSettingsProvider>()
-        .repository
-        .watchInstructionHistory(limit: 10);
-  }
 
   // "0.75×", "1×", "1.25×", "1.5×"
   static String _speedText(double rate) =>
@@ -166,7 +155,8 @@ class _VoiceGuidanceScreenState extends State<VoiceGuidanceScreen> {
               ),
             ),
             StreamList<InstructionHistoryEntry>(
-              stream: _history,
+              createStream: () =>
+                  provider.repository.watchInstructionHistory(limit: 10),
               emptyText: 'No instructions spoken yet.',
               itemBuilder: (context, entry) => ListTile(
                 contentPadding: EdgeInsets.zero,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'voice_routes.dart';
+import 'voice_shell.dart';
 
 /// Development entry point for Member 2 only. It lets me run my screens
 /// without changing the shared lib/main.dart or lib/router.dart.
@@ -26,6 +27,9 @@ Future<void> main() async {
     // No internet: the app still opens and uses default settings.
     debugPrint('voice_dev_main: anonymous sign-in failed: $e');
   }
+
+  // Only this dev app shows the tab bar placeholder (see VoiceShell).
+  VoiceShell.showTabBarPlaceholder = true;
 
   runApp(const VoiceDevApp());
 }

@@ -39,7 +39,6 @@ class VoiceCommandScreen extends StatefulWidget {
 class _VoiceCommandScreenState extends State<VoiceCommandScreen> {
   late final CommandService _commands;
   late final VoiceRepository _repository;
-  late final Stream<List<CustomCommand>> _customCommands;
   late final TextEditingController _wakeController;
   late final VoiceSettingsProvider _settingsProvider;
   late String _shownWakePhrase; // the saved phrase last put in the text box
@@ -50,7 +49,6 @@ class _VoiceCommandScreenState extends State<VoiceCommandScreen> {
     _settingsProvider = context.read<VoiceSettingsProvider>();
     _commands = context.read<CommandService>();
     _repository = _settingsProvider.repository;
-    _customCommands = _repository.watchCustomCommands();
     _shownWakePhrase = _settingsProvider.settings.wakePhrase;
     _wakeController = TextEditingController(text: _shownWakePhrase);
     _settingsProvider.addListener(_syncWakePhrase);
@@ -310,7 +308,7 @@ class _VoiceCommandScreenState extends State<VoiceCommandScreen> {
               ),
             ),
             StreamList<CustomCommand>(
-              stream: _customCommands,
+              createStream: _repository.watchCustomCommands,
               emptyText: 'No custom commands yet. Add one, for example "say again" for Repeat.',
               itemBuilder: (context, command) => _CommandTile(
                 command: command,
