@@ -82,7 +82,7 @@ The wireframes show old FR/NFR requirement IDs. The code and these notes use onl
 | # | What changed | Why |
 |---|---|---|
 | P1 | The alerts are **pop-ups over any of my screens**, not separate routes. | The wireframe says a high alert "interrupts the current screen" and the low banner "does not block the current task". |
-| P2 | The high alert says "WARNING" + the message, has a red **Dismiss alert** button, and says whether it is vibrating ("Strong vibration until you dismiss" or "Vibration is turned off"). It closes only on Dismiss, not when the "obstacle is cleared". | There is no obstacle sensor that could tell us it was cleared. |
+| P2 | The high alert says "WARNING" + the message, has a red **Dismiss alert** button, and says whether it is vibrating ("Strong vibration until you dismiss" or "Vibration is turned off"). It closes only on Dismiss, not when the "obstacle is cleared". As a safety stop, the vibration ends by itself after 30 seconds (`HapticService.maxHighAlertDuration`); the alert stays on screen until Dismiss. | There is no obstacle sensor that could tell us it was cleared. The 30-second stop keeps the phone from vibrating for ever if nobody is holding it. |
 | P3 | The low banner starts with "Notice:" and has a ✕ (Dismiss notice) button as well as hiding itself after about 4 seconds. | Not colour only. Users can also close it early. |
 | P4 | The alert "tone" is the text-to-speech voice at a higher pitch ("Warning! Warning!"), not a sound file. | There is no audio-player package (it would need a change to the shared `pubspec.yaml`). |
 
