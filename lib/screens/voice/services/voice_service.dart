@@ -107,6 +107,13 @@ class VoiceService extends ChangeNotifier {
     return _speak(text, pitch: pitch);
   }
 
+  /// Speaks a short message such as "You are on track."
+  /// Does not change the Replay text or the history.
+  Future<bool> speakMessage(String text) async {
+    if (!_settings.voiceEnabled) return false;
+    return _speak(text, pitch: normalPitch);
+  }
+
   /// Speaks a sample sentence for the "Test voice announcement" button.
   Future<bool> testAnnouncement() {
     const sample = 'In 50 metres, turn right onto King Street.';

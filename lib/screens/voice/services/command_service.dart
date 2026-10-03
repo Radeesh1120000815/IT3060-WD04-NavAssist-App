@@ -41,7 +41,7 @@ class CommandService extends ChangeNotifier {
     'stop': CommandAction.stop,
   };
 
-  /// Called when a command is recognised. Set by the screen.
+  /// Called when a command is recognised. Set by VoiceShell.
   void Function(CommandAction action)? onCommand;
 
   bool _isAvailable = false;
@@ -70,6 +70,9 @@ class CommandService extends ChangeNotifier {
   /// A simple message to show or speak, or null.
   String? get errorMessage => _errorMessage;
 
+  /// True if the current listening session needs the wake phrase first.
+  bool get needsWakePhrase => _sessionNeedsWake;
+
   // ---------------------------------------------------------------------
   // Matching (pure logic, easy to unit test)
   // ---------------------------------------------------------------------
@@ -96,15 +99,11 @@ class CommandService extends ChangeNotifier {
     var text = normalise(heard);
     if (text.isEmpty) return null;
 
-    final wake = normalise(wakePhrase ?? '');
-    if (wake.isNotEmpty) {
-      if (text.contains(wake)) {
-        // Remove the wake phrase so its words are not read as a command.
-        text = text.replaceFirst(wake, ' ').trim();
-      } else if (!text.replaceAll(' ', '').contains(wake.replaceAll(' ', ''))) {
-        // Not even "hey nav assist" (split differently) was heard.
-        return null;
-      }
+    if (wakePhrase != null) {
+      // Remove the wake phrase so its words are not read as a command.
+      final rest = removeWakePhrase(text, wakePhrase);
+      if (rest == null) return null; // wake phrase not heard
+      text = rest;
     }
 
     final enabled =
@@ -122,6 +121,22 @@ class CommandService extends ChangeNotifier {
       if (_containsPhrase(text, entry.key)) return entry.value;
     }
     return null;
+  }
+
+  /// Removes the wake phrase from [text] and returns what is left,
+  /// or null if the wake phrase was not heard.
+  /// Capitals and spaces do not matter, so "Hey NavAssist", "hey nav assist"
+  /// and "heynavassist" all count as "hey navassist".
+  static String? removeWakePhrase(String text, String wakePhrase) {
+    final clean = normalise(text);
+    final letters = normalise(wakePhrase).replaceAll(' ', '');
+    if (letters.isEmpty) return clean;
+
+    // "hey" becomes the pattern "h ?e ?y": a space may come between letters.
+    final pattern = RegExp(letters.split('').map(RegExp.escape).join(' ?'));
+    final match = pattern.firstMatch(clean);
+    if (match == null) return null;
+    return normalise(clean.replaceRange(match.start, match.end, ' '));
   }
 
   // Whole words only, so "next" does not match "nexus".
@@ -152,6 +167,10 @@ class CommandService extends ChangeNotifier {
     _notify();
     return _isAvailable;
   }
+
+  /// Calls [init] the first time, or again if it failed before
+  /// (for example, the user has since allowed the microphone).
+  Future<bool> ensureReady() async => _isAvailable ? true : init();
 
   /// READ: loads custom commands from Firestore.
   /// If that fails, only the built-in commands are used.
@@ -225,7 +244,14 @@ class CommandService extends ChangeNotifier {
       wakePhrase: _sessionNeedsWake ? settings.wakePhrase : null,
       customCommands: _customCommands,
     );
-    if (action == null) return;
+    if (action == null) {
+      // The user said only the wake phrase and then paused. The recogniser
+      // stops on the pause, so the next session will not need it again.
+      final wakeHeard =
+          removeWakePhrase(result.recognizedWords, settings.wakePhrase) != null;
+      if (_sessionNeedsWake && wakeHeard) _skipWakeOnce = true;
+      return;
+    }
 
     _lastAction = action;
     _notify();

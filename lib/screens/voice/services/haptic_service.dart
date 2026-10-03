@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:vibration/vibration.dart';
 
+import '../data/haptic_cue.dart';
 import '../data/voice_settings.dart';
 import '../data/voice_settings_provider.dart';
 
@@ -86,6 +87,20 @@ class HapticService {
     final amplitude = amplitudeFor(settingsProvider.settings.hapticIntensity);
     return _vibrate(lowSeverityPattern, amplitude: amplitude);
   }
+
+  /// Plays one navigation cue, e.g. turn left = 1 short pulse.
+  /// Uses the user's intensity, except arrival which is always strong.
+  /// Returns false if it did not vibrate (switched off or no vibrator).
+  Future<bool> playCue(HapticCue cue) {
+    final amplitude = cue.alwaysStrong
+        ? 255
+        : amplitudeFor(settingsProvider.settings.hapticIntensity);
+    return _vibrate(cue.pattern, amplitude: amplitude);
+  }
+
+  /// True if this phone can change vibration strength.
+  /// Without it, Gentle / Medium / Strong all feel the same.
+  bool get hasAmplitudeControl => _hasAmplitudeControl;
 
   /// Stops any vibration (called when an alert is dismissed).
   Future<void> stop() async {

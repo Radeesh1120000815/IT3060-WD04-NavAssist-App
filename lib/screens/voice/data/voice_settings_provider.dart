@@ -19,6 +19,11 @@ class VoiceSettingsProvider extends ChangeNotifier {
   VoiceSettings _settings = const VoiceSettings();
   bool _isLoading = false;
   String? _errorMessage;
+  Future<void>? _loadFuture;
+
+  /// Finishes when the first [load] has finished. Navigation waits for this
+  /// so the first instruction uses the user's own volume and speed.
+  Future<void> get ready => _loadFuture ?? Future<void>.value();
 
   /// The current settings. Defaults until [load] finishes.
   VoiceSettings get settings => _settings;
@@ -32,7 +37,9 @@ class VoiceSettingsProvider extends ChangeNotifier {
   /// READ: loads settings from Firestore. Called once when the app starts.
   /// If it fails (e.g. no internet) the defaults are kept,
   /// so the app still works.
-  Future<void> load() async {
+  Future<void> load() => _loadFuture = _load();
+
+  Future<void> _load() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();

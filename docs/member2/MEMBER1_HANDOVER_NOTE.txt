@@ -1,0 +1,34 @@
+Hi! This is Member 2 (Voice & Accessibility).
+
+How to open Active Navigation from your Start Navigation screen:
+
+1. In lib/router.dart, add my routes to the routes list:
+
+     import 'screens/voice/voice_routes.dart';
+     ...
+     routes: [ ...yourRoutes, ...voiceRoutes ],
+
+2. On Start Navigation, open my screen and pass the route:
+
+     context.push('/navigate', extra: {
+       'destination': 'Central Library',
+       'instructions': [
+         'Head north on Maple Street',
+         'Turn right onto King Street',
+         'Arrive at Central Library',
+       ],
+     });
+
+   - 'destination' is a String.
+   - 'instructions' is a List of Strings, in order. Plain sentences are fine.
+     I work out the arrow and vibration from words like "left", "right",
+     "cross" and "arrive".
+   - Both are optional. If extra is missing or empty, my screen uses a
+     built-in demo route, so nothing breaks.
+
+That's it. You don't need to import anything else from my folder. If you
+later have distances per step, tell me and I'll add an optional
+'distancesMetres' list.
+
+You can also use the constant VoiceRoutes.activeNavigation instead of
+typing '/navigate'.
