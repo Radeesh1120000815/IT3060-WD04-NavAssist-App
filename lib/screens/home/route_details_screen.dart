@@ -1,17 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../services/firebase_service.dart';
 
-class RouteDetailsScreen extends StatelessWidget {
+class RouteDetailsScreen extends StatefulWidget {
   final Map<String, dynamic>? extra;
   const RouteDetailsScreen({super.key, this.extra});
 
+  @override
+  State<RouteDetailsScreen> createState() => _RouteDetailsScreenState();
+}
+
+class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
   static const Color primaryBlue = Color(0xFF1B4FD8);
+
+  String? _historyDocId;
+
+  @override
+  void initState() {
+    super.initState();
+    _logRouteView();
+  }
+
+  // NEW — CREATE: logs that this route was viewed, as soon as the screen opens
+  Future<void> _logRouteView() async {
+    try {
+      final id = await FirebaseService.addDocument('route_history', {
+        'destinationName': widget.extra?['destinationName'] ?? 'Destination',
+        'reviewed': false,
+      });
+      setState(() => _historyDocId = id);
+    } catch (e) {
+      debugPrint('Error logging route view: $e');
+    }
+  }
+
+  // NEW — UPDATE: marks that record as reviewed once the user taps Start Navigation
+  Future<void> _markReviewed() async {
+    if (_historyDocId == null) return;
+    try {
+      await FirebaseService.updateDocument('route_history', _historyDocId!, {
+        'reviewed': true,
+      });
+    } catch (e) {
+      debugPrint('Error marking route reviewed: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final destinationName = extra?['destinationName'] ?? 'Destination';
-    final time = extra?['time'] ?? '15 min';
-    final distance = extra?['distance'] ?? '1.2 km';
+    final destinationName = widget.extra?['destinationName'] ?? 'Destination';
+    final time = widget.extra?['time'] ?? '15 min';
+    final distance = widget.extra?['distance'] ?? '1.2 km';
 
     // Representative turn-by-turn steps.
     // NOTE: No live routing/directions API integrated in this timeframe (see docs/DEVIATIONS.md).
@@ -145,12 +184,15 @@ class RouteDetailsScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    context.push('/navigate', extra: {
-                      'destinationName': destinationName,
-                      'distance': distance,
-                      'time': time,
-                    });
+                  onPressed: () async {
+                    await _markReviewed(); // NEW — Update call before navigating
+                    if (context.mounted) {
+                      context.push('/navigate', extra: {
+                        'destinationName': destinationName,
+                        'distance': distance,
+                        'time': time,
+                      });
+                    }
                   },
                   icon: const Icon(Icons.navigation),
                   label: const Text('Start Navigation'),
