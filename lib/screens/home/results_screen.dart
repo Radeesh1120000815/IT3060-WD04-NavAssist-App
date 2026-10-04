@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import '../../services/firebase_service.dart';
 
 class ResultsScreen extends StatefulWidget {
   final Map<String, dynamic>? extra;
@@ -17,11 +17,15 @@ class _ResultsScreenState extends State<ResultsScreen> {
   late List<Map<String, dynamic>> results;
   int selectedIndex = 0;
 
+  // NEW — tracks which place names are already saved as favorites
+  Set<String> favoritedNames = {};
+
   @override
   void initState() {
     super.initState();
     searchTerm = widget.extra?['name'] ?? 'Destination';
     results = _generateMockResults(searchTerm);
+    _loadFavorites(); // NEW — load existing favorites when screen opens
   }
 
   // Generates realistic nearby result variations from the search term.
@@ -33,6 +37,26 @@ class _ResultsScreenState extends State<ResultsScreen> {
       {'name': '$term Junction', 'distance': '1.2 km'},
       {'name': '$term Town', 'distance': '1.5 km'},
     ];
+  }
+
+  // NEW — READ: load all saved favorite names from Firestore
+  Future<void> _loadFavorites() async {
+    final data = await FirebaseService.getDocuments('saved_places');
+    setState(() {
+      favoritedNames = data.map((d) => d['name'] as String).toSet();
+    });
+  }
+
+  // NEW — CREATE: save a place as a favorite
+  Future<void> _toggleFavorite(String name) async {
+    if (favoritedNames.contains(name)) return; // already saved, do nothing
+    await FirebaseService.addDocument('saved_places', {'name': name});
+    setState(() => favoritedNames.add(name));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$name saved to favorites')),
+      );
+    }
   }
 
   @override
@@ -72,6 +96,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
                   itemBuilder: (context, index) {
                     final item = results[index];
                     final isSelected = index == selectedIndex;
+                    final isFavorited = favoritedNames.contains(item['name']); // NEW
+
                     return GestureDetector(
                       onTap: () => setState(() => selectedIndex = index),
                       child: Container(
@@ -101,6 +127,15 @@ class _ResultsScreenState extends State<ResultsScreen> {
                                       style: const TextStyle(fontSize: 12, color: Colors.grey)),
                                 ],
                               ),
+                            ),
+                            // NEW — favorite heart button
+                            IconButton(
+                              icon: Icon(
+                                isFavorited ? Icons.favorite : Icons.favorite_border,
+                                color: isFavorited ? Colors.red : Colors.grey,
+                                size: 20,
+                              ),
+                              onPressed: () => _toggleFavorite(item['name']),
                             ),
                             if (isSelected)
                               const Icon(Icons.check_circle, color: primaryBlue, size: 20),
