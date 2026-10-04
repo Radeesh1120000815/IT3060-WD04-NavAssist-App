@@ -15,3 +15,5 @@ Referenced in the final report's "Implementation details" and "Deviations" secti
 | 4 | Search Destination | Recent searches list reads live from Firestore instead of static placeholder data | Required to satisfy the CRUD/working-app requirement for Milestone 03; Milestone 02 only showed static example data since it was a prototype, not a working app. |
 
 | 5 |  Home / Search     | Recent searches use a live Firestore stream with duplicate-prevention (same search updates timestamp instead of creating a new entry) | Needed for a working app — static wireframe didn't address real data behaviour; prevents the recent list from filling with repeated identical entries. |
+
+| 6 | Destination Selection | Results are generated as realistic mock variations of the search term, not from a live maps/places API | No real-time places/maps API (e.g., Google Places) was integrated within the project timeframe; results demonstrate the intended UI/UX and selection flow with representative data instead. |

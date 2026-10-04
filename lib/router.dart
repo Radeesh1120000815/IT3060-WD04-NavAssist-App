@@ -11,7 +11,10 @@ final GoRouter appRouter = GoRouter(
   routes: [
     GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
     GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
-    GoRoute(path: '/results', builder: (context, state) => const ResultsScreen()),
+    GoRoute(path: '/results', builder: (context, state) {
+      final extra = state.extra as Map<String, dynamic>?;
+      return ResultsScreen(extra: extra);
+    }),
     GoRoute(path: '/routes', builder: (context, state) => const RouteOptionsScreen()),
     GoRoute(path: '/details', builder: (context, state) => const RouteDetailsScreen()),
     GoRoute(path: '/navigate', builder: (context, state) {
