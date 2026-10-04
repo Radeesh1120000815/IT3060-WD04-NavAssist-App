@@ -15,7 +15,10 @@ final GoRouter appRouter = GoRouter(
       final extra = state.extra as Map<String, dynamic>?;
       return ResultsScreen(extra: extra);
     }),
-    GoRoute(path: '/routes', builder: (context, state) => const RouteOptionsScreen()),
+    GoRoute(path: '/routes', builder: (context, state) {
+      final extra = state.extra as Map<String, dynamic>?;
+      return RouteOptionsScreen(extra: extra);
+    }),
     GoRoute(path: '/details', builder: (context, state) => const RouteDetailsScreen()),
     GoRoute(path: '/navigate', builder: (context, state) {
       final extra = state.extra as Map<String, dynamic>?;
