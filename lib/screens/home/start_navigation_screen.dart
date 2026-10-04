@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:vibration/vibration.dart';
+import '../../services/firebase_service.dart';
 
 class StartNavigationScreen extends StatefulWidget {
   final Map<String, dynamic>? destinationData;
@@ -21,6 +22,9 @@ class _StartNavigationScreenState extends State<StartNavigationScreen> {
   late String destinationName;
   final String nextInstruction = 'Turn left in 200 m';
 
+  // NEW — tracks the Firestore document ID for this navigation session
+  String? _sessionDocId;
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +33,16 @@ class _StartNavigationScreenState extends State<StartNavigationScreen> {
   }
 
   Future<void> _announceStart() async {
+    // NEW — CREATE: log the start of this navigation session
+    try {
+      _sessionDocId = await FirebaseService.addDocument('navigation_sessions', {
+        'destinationName': destinationName,
+        'status': 'active',
+      });
+    } catch (e) {
+      debugPrint('Error creating navigation session: $e');
+    }
+
     if (audioOn) {
       await _tts.setLanguage('en-US');
       await _tts.setSpeechRate(0.5);
@@ -39,6 +53,18 @@ class _StartNavigationScreenState extends State<StartNavigationScreen> {
       if (hasVibrator) {
         Vibration.vibrate(duration: 300);
       }
+    }
+  }
+
+  // NEW — UPDATE: marks the session as ended
+  Future<void> _endSession() async {
+    if (_sessionDocId == null) return;
+    try {
+      await FirebaseService.updateDocument('navigation_sessions', _sessionDocId!, {
+        'status': 'ended',
+      });
+    } catch (e) {
+      debugPrint('Error ending navigation session: $e');
     }
   }
 
@@ -114,7 +140,7 @@ class _StartNavigationScreenState extends State<StartNavigationScreen> {
                             Icon(Icons.map_outlined, size: 48, color: Colors.grey.shade400),
                             const SizedBox(height: 8),
                             Text(
-                              'Route map preview\n(to ${destinationData_display()})',
+                              'Route map preview\n(to $destinationName)',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                             ),
@@ -192,9 +218,10 @@ class _StartNavigationScreenState extends State<StartNavigationScreen> {
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                  onPressed: () {
+                  onPressed: () async {
                     _tts.stop();
-                    context.go('/');
+                    await _endSession(); // NEW — Update call
+                    if (context.mounted) context.go('/');
                   },
                   child: const Text('End Navigation', style: TextStyle(color: Colors.grey)),
                 ),
@@ -205,9 +232,6 @@ class _StartNavigationScreenState extends State<StartNavigationScreen> {
       ),
     );
   }
-
-  // ignore: non_constant_identifier_names
-  String destinationData_display() => destinationName;
 }
 
 class _ToggleTile extends StatelessWidget {
