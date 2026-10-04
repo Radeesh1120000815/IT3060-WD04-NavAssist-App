@@ -126,28 +126,44 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemCount: recentSearches.length,
                       itemBuilder: (context, index) {
                         final item = recentSearches[index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 6),
-                          elevation: 0,
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: BorderSide(color: Colors.grey.shade200),
-                          ),
-                          child: ListTile(
-                            leading: const Icon(Icons.location_on_outlined, color: primaryBlue),
-                            title: Text(item['name'] ?? ''),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                              context.push('/results', extra: {'name': item['name']});
-                            },
-                          ),
-                        );
-                      },
-                    );
-                  },
+                        return Dismissible(
+                              key: Key(item['id']),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.only(right: 20),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade400,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(Icons.delete, color: Colors.white),
+                              ),
+                              onDismissed: (direction) {
+                                FirebaseService.deleteDocument('recent_searches', item['id']);
+                              },
+                              child: Card(
+                                margin: const EdgeInsets.only(bottom: 6),
+                                elevation: 0,
+                                color: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: BorderSide(color: Colors.grey.shade200),
+                                ),
+                                child: ListTile(
+                                  leading: const Icon(Icons.location_on_outlined, color: primaryBlue),
+                                  title: Text(item['name'] ?? ''),
+                                  trailing: const Icon(Icons.chevron_right),
+                                  onTap: () {
+                                    context.push('/results', extra: {'name': item['name']});
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                       );
+                    },
+                  ),
                 ),
-              ),
 
               // SOS button
               SizedBox(

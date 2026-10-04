@@ -23,3 +23,15 @@ Referenced in the final report's "Implementation details" and "Deviations" secti
 | 8 |   Route Details    | Turn-by-turn steps and safety warnings shown as representative fixed content rather than from a live routing/directions API | Consistent with the Route Options limitation — no live directions API integrated in this timeframe; the step-by-step, warnings-included layout from the selected Variant A wireframe is preserved. |
 
 | 9 |   Start Navigation | Map preview is a placeholder icon/label instead of a real interactive map | No live maps SDK (eg., Google Maps) integrated in this timeframe; audio (text-to-speech) and vibration feedback are fully functional and real, satisfying UR-01 and UR-03, while the visual map remains a placeholder pending future map integration. |
+
+### CRUD compliance additions (Milestone 03 requirement: minimum 2 CRUD operations per interface)
+
+| 10 |    Home   | Added swipe-to-delete on recent search items (not shown in the Milestone 02 wireframe) | Required to demonstrate a working Delete operation per the Milestone 03 CRUD requirement (minimum 2 CRUD operations per interface); the wireframe only specified a static recent-searches list. |
+
+| 11 | Destination Selection | Added a "Save to Favorites" heart icon on each result card (not shown in the Milestone 02 wireframe) | Required to demonstrate a working Create operation per the Milestone 03 CRUD requirement; builds on the existing "selectable result" interaction without changing the core list/selection layout from Variant A. |
+
+| 12 |  Route Options | Added silent saving of the user's selected route as a preference (no new visible UI element) | Required to demonstrate Create/Update operations per the Milestone 03 CRUD requirement; implemented as a background action triggered by the existing "Select Route" button rather than adding a new interface element, to preserve the approved Variant B layout. |
+
+| 13 |  Route Details | Added a background "route viewed" history record, created on screen load and marked reviewed when Start Navigation is tapped (no new visible UI element) | Required to demonstrate Create/Update operations per the Milestone 03 CRUD requirement; implemented invisibly to preserve the step-by-step layout from the approved Variant A wireframe. |
+
+| 14 |  Start Navigation | Added a background navigation session record, created when navigation starts and updated to "ended" when the user taps End Navigation (no new visible UI element) | Required to demonstrate Create/Update operations per the Milestone 03 CRUD requirement; implemented invisibly to preserve the map + instruction + audio/vibration layout from the approved Variant B wireframe. |
