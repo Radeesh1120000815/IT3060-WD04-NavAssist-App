@@ -10,24 +10,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Map<String, dynamic>> recentSearches = [];
-  bool isLoading = true;
-
   static const Color primaryBlue = Color(0xFF1B4FD8);
-
-  @override
-  void initState() {
-    super.initState();
-    _loadRecent();
-  }
-
-  Future<void> _loadRecent() async {
-    final data = await FirebaseService.getDocuments('recent_searches');
-    setState(() {
-      recentSearches = data;
-      isLoading = false;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: primaryBlue.withValues(alpha:0.1),
+                      color: primaryBlue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.explore, color: primaryBlue),
@@ -62,8 +45,8 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: primaryBlue.withValues(alpha:0.06),
-                  border: Border.all(color: primaryBlue.withValues(alpha:0.2)),
+                  color: primaryBlue.withValues(alpha: 0.06),
+                  border: Border.all(color: primaryBlue.withValues(alpha: 0.2)),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -92,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     border: Border.all(color: Colors.grey.shade300),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha:0.03), blurRadius: 6, offset: const Offset(0, 2)),
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2)),
                     ],
                   ),
                   child: Row(
@@ -127,34 +110,43 @@ class _HomeScreenState extends State<HomeScreen> {
               const Text('Recent', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 6),
 
+              // Recent searches — live Firestore stream
               Expanded(
-                child: isLoading
-                    ? const Center(child: CircularProgressIndicator(color: primaryBlue))
-                    : recentSearches.isEmpty
-                        ? const Text('No recent searches yet', style: TextStyle(color: Colors.grey))
-                        : ListView.builder(
-                            itemCount: recentSearches.length,
-                            itemBuilder: (context, index) {
-                              final item = recentSearches[index];
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 6),
-                                elevation: 0,
-                                color: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  side: BorderSide(color: Colors.grey.shade200),
-                                ),
-                                child: ListTile(
-                                  leading: const Icon(Icons.location_on_outlined, color: primaryBlue),
-                                  title: Text(item['name'] ?? ''),
-                                  trailing: const Icon(Icons.chevron_right),
-                                  onTap: () {
-                                    context.push('/results', extra: {'name': item['name']});
-                                  },
-                                ),
-                              );
+                child: StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: FirebaseService.streamRecentSearches(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: primaryBlue));
+                    }
+                    final recentSearches = snapshot.data ?? [];
+                    if (recentSearches.isEmpty) {
+                      return const Text('No recent searches yet', style: TextStyle(color: Colors.grey));
+                    }
+                    return ListView.builder(
+                      itemCount: recentSearches.length,
+                      itemBuilder: (context, index) {
+                        final item = recentSearches[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          elevation: 0,
+                          color: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          child: ListTile(
+                            leading: const Icon(Icons.location_on_outlined, color: primaryBlue),
+                            title: Text(item['name'] ?? ''),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              context.push('/results', extra: {'name': item['name']});
                             },
                           ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
 
               // SOS button

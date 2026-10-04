@@ -42,4 +42,46 @@ class FirebaseService {
   static Future<void> deleteDocument(String collection, String docId) async {
     await _db.collection(collection).doc(docId).delete();
   }
+
+  // Add a search, or if it already exists, just refresh its timestamp (no duplicates)
+static Future<void> addOrUpdateRecentSearch(String name) async {
+  final trimmed = name.trim();
+  if (trimmed.isEmpty) return;
+
+  final existing = await _db
+      .collection('recent_searches')
+      .where('name', isEqualTo: trimmed)
+      .limit(1)
+      .get();
+
+  if (existing.docs.isNotEmpty) {
+    // Already exists — just bump its timestamp to move it to the top
+    await existing.docs.first.reference.update({
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  } else {
+    // New search — add it
+    await _db.collection('recent_searches').add({
+      'name': trimmed,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+}
+
+// Live stream of recent searches, newest first, limited to 10
+static Stream<List<Map<String, dynamic>>> streamRecentSearches({int limit = 10}) {
+  return _db
+      .collection('recent_searches')
+      .orderBy('createdAt', descending: true)
+      .limit(limit)
+      .snapshots()
+      .map((snapshot) {
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      data['id'] = doc.id;
+      return data;
+    }).toList();
+  });
+}
+
 }
