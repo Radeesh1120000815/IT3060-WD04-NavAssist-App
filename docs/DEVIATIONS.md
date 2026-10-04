@@ -19,3 +19,6 @@ Referenced in the final report's "Implementation details" and "Deviations" secti
 | 6 | Destination Selection | Results are generated as realistic mock variations of the search term, not from a live maps/places API | No real-time places/maps API (e.g., Google Places) was integrated within the project timeframe; results demonstrate the intended UI/UX and selection flow with representative data instead. |
 
 | 7 |   Route Options    | Route data (time, distance, safety note) generated as representative fixed values rather than from a live routing/directions API | No live routing API (e.g., Google Directions) integrated within the project timeframe; the three-option, safety-first comparison pattern from the selected Variant B wireframe is preserved with realistic placeholder data. |
+
+| 8 |   Route Details    | Turn-by-turn steps and safety warnings shown as representative fixed content rather than from a live routing/directions API | Consistent with the Route Options limitation — no live directions API integrated in this timeframe; the step-by-step, warnings-included layout from the selected Variant A wireframe is preserved. |
+
