@@ -22,3 +22,4 @@ Referenced in the final report's "Implementation details" and "Deviations" secti
 
 | 8 |   Route Details    | Turn-by-turn steps and safety warnings shown as representative fixed content rather than from a live routing/directions API | Consistent with the Route Options limitation — no live directions API integrated in this timeframe; the step-by-step, warnings-included layout from the selected Variant A wireframe is preserved. |
 
+| 9 |   Start Navigation | Map preview is a placeholder icon/label instead of a real interactive map | No live maps SDK (eg., Google Maps) integrated in this timeframe; audio (text-to-speech) and vibration feedback are fully functional and real, satisfying UR-01 and UR-03, while the visual map remains a placeholder pending future map integration. |
