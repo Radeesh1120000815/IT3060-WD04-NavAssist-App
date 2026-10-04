@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../services/firebase_service.dart';
 
 class RouteOptionsScreen extends StatefulWidget {
   final Map<String, dynamic>? extra;
@@ -52,6 +53,24 @@ class _RouteOptionsScreenState extends State<RouteOptionsScreen> {
         'recommended': false,
       },
     ];
+  }
+
+  // NEW — CREATE or UPDATE: saves the user's chosen route as their preference.
+  // If a preference document already exists, update it; otherwise create one.
+  Future<void> _saveRoutePreference(String routeName) async {
+    final existing = await FirebaseService.getDocuments('route_preferences');
+    if (existing.isNotEmpty) {
+      await FirebaseService.updateDocument(
+        'route_preferences',
+        existing.first['id'],
+        {'preferredRoute': routeName},
+      );
+    } else {
+      await FirebaseService.addDocument(
+        'route_preferences',
+        {'preferredRoute': routeName},
+      );
+    }
   }
 
   @override
@@ -175,6 +194,7 @@ class _RouteOptionsScreenState extends State<RouteOptionsScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     final selected = routes[selectedIndex];
+                    _saveRoutePreference(selected['name']); // NEW — Create/Update call
                     context.push('/details', extra: {
                       'destinationName': destinationName,
                       'time': selected['time'],
