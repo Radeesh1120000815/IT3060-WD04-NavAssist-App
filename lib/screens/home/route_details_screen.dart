@@ -187,7 +187,7 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                   onPressed: () async {
                     await _markReviewed(); // NEW — Update call before navigating
                     if (context.mounted) {
-                      context.push('/navigate', extra: {
+                      context.push('/navigate-start', extra: {
                         'destinationName': destinationName,
                         'distance': distance,
                         'time': time,

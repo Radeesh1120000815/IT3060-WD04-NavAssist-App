@@ -22,7 +22,6 @@ class _StartNavigationScreenState extends State<StartNavigationScreen> {
   late String destinationName;
   final String nextInstruction = 'Turn left in 200 m';
 
-  // NEW — tracks the Firestore document ID for this navigation session
   String? _sessionDocId;
 
   @override
@@ -33,7 +32,7 @@ class _StartNavigationScreenState extends State<StartNavigationScreen> {
   }
 
   Future<void> _announceStart() async {
-    // NEW — CREATE: log the start of this navigation session
+    // CREATE: log the start of this navigation session
     try {
       _sessionDocId = await FirebaseService.addDocument('navigation_sessions', {
         'destinationName': destinationName,
@@ -56,7 +55,7 @@ class _StartNavigationScreenState extends State<StartNavigationScreen> {
     }
   }
 
-  // NEW — UPDATE: marks the session as ended
+  // UPDATE: marks the session as ended
   Future<void> _endSession() async {
     if (_sessionDocId == null) return;
     try {
@@ -194,6 +193,28 @@ class _StartNavigationScreenState extends State<StartNavigationScreen> {
               ),
               const SizedBox(height: 10),
 
+              // NEW — Continue to Member 2's live Active Navigation screen
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    context.push('/navigate', extra: {
+                      'destinationName': destinationName,
+                    });
+                  },
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('Continue to Live Navigation'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
               // SOS button (kept visible during navigation)
               SizedBox(
                 width: double.infinity,
@@ -214,13 +235,13 @@ class _StartNavigationScreenState extends State<StartNavigationScreen> {
               ),
               const SizedBox(height: 8),
 
-              // End Navigation
+              // End Navigation — returns home
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () async {
                     _tts.stop();
-                    await _endSession(); // NEW — Update call
+                    await _endSession();
                     if (context.mounted) context.go('/');
                   },
                   child: const Text('End Navigation', style: TextStyle(color: Colors.grey)),

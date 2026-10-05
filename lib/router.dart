@@ -5,6 +5,7 @@ import 'screens/home/results_screen.dart';
 import 'screens/home/route_options_screen.dart';
 import 'screens/home/route_details_screen.dart';
 import 'screens/home/start_navigation_screen.dart';
+import 'screens/voice/voice_routes.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -23,11 +24,11 @@ final GoRouter appRouter = GoRouter(
       final extra = state.extra as Map<String, dynamic>?;
       return RouteDetailsScreen(extra: extra);
     }),
-    GoRoute(path: '/navigate', builder: (context, state) {
+    GoRoute(path: '/navigate-start', builder: (context, state) {
       final extra = state.extra as Map<String, dynamic>?;
       return StartNavigationScreen(destinationData: extra);
     }),
-    // Member 2 will add: ...voiceRoutes,
+    ...voiceRoutes,
     // Member 3 will add their own safety routes similarly
   ],
 );
