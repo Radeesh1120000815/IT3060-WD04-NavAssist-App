@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-<uses-permission android:name="android.permission.RECORD_AUDIO" />
-<uses-permission android:name="android.permission.INTERNET" />
+    <!-- Member 2: microphone for voice commands (speech_to_text) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- Makes sure release builds can reach Firebase -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="NavAssist"
         android:name="${applicationName}"
@@ -42,6 +44,14 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Member 2: let the app find the speech recogniser (Android 11+) -->
+        <intent>
+            <action android:name="android.speech.RecognitionService"/>
+        </intent>
+        <!-- Member 2: let the app find the text-to-speech engine (Android 11+) -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
         </intent>
     </queries>
 </manifest>
