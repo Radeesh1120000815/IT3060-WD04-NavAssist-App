@@ -72,15 +72,29 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> _submitSearch(String query) async {
-    if (query.trim().isEmpty) return;
-
-    // Save to Firestore as a recent search
-    await FirebaseService.addOrUpdateRecentSearch(query);
-
-    if (!mounted) return;
-    context.push('/results', extra: {'name': query.trim()});
+  debugPrint('=== _submitSearch called with: "$query" ===');
+  if (query.trim().isEmpty) {
+    debugPrint('=== Empty query, returning early ===');
+    return;
   }
 
+  try {
+    await FirebaseService.addOrUpdateRecentSearch(query);
+    debugPrint('=== Firestore save SUCCEEDED ===');
+  } catch (e, stack) {
+    debugPrint('=== Firestore save FAILED: $e ===');
+    debugPrint('=== Stack: $stack ===');
+  }
+
+  if (!mounted) {
+    debugPrint('=== Widget not mounted, aborting navigation ===');
+    return;
+  }
+
+  debugPrint('=== About to navigate to /results ===');
+  context.push('/results', extra: {'name': query.trim()});
+  debugPrint('=== Navigation call completed ===');
+}
   @override
   void dispose() {
     _controller.dispose();

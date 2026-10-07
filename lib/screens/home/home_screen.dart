@@ -188,15 +188,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        selectedItemColor: primaryBlue,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.place), label: 'Places'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      ),
-    );
-  }
+       currentIndex: 0,
+       selectedItemColor: primaryBlue,
+       unselectedItemColor: Colors.grey,
+       onTap: (index) {
+         if (index == 1) context.push('/places');
+     },
+     items: const [
+      BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+      BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Places'),
+     ],
+    ),
+  );
+ }
 }
