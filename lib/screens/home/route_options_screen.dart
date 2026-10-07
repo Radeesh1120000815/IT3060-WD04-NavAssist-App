@@ -55,21 +55,37 @@ class _RouteOptionsScreenState extends State<RouteOptionsScreen> {
     ];
   }
 
-  // NEW — CREATE or UPDATE: saves the user's chosen route as their preference.
-  // If a preference document already exists, update it; otherwise create one.
+  // CREATE or UPDATE: saves the user's chosen route, keyed by destination name.
+  // If a preference for THIS destination already exists, update it;
+  // otherwise create a new one. Different destinations get their own records.
   Future<void> _saveRoutePreference(String routeName) async {
-    final existing = await FirebaseService.getDocuments('route_preferences');
-    if (existing.isNotEmpty) {
-      await FirebaseService.updateDocument(
-        'route_preferences',
-        existing.first['id'],
-        {'preferredRoute': routeName},
-      );
-    } else {
-      await FirebaseService.addDocument(
-        'route_preferences',
-        {'preferredRoute': routeName},
-      );
+    try {
+      final existing = await FirebaseService.getDocuments('route_preferences');
+
+      // Look for a document that matches THIS destination specifically
+      final matchingDoc = existing.where(
+        (doc) => doc['destinationName'] == destinationName,
+      ).toList();
+
+      if (matchingDoc.isNotEmpty) {
+        // Same destination searched before — update its saved route
+        await FirebaseService.updateDocument(
+          'route_preferences',
+          matchingDoc.first['id'],
+          {'preferredRoute': routeName},
+        );
+      } else {
+        // New destination — create a fresh preference record for it
+        await FirebaseService.addDocument(
+          'route_preferences',
+          {
+            'destinationName': destinationName,
+            'preferredRoute': routeName,
+          },
+        );
+      }
+    } catch (e) {
+      debugPrint('Error saving route preference: $e');
     }
   }
 
@@ -192,15 +208,17 @@ class _RouteOptionsScreenState extends State<RouteOptionsScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     final selected = routes[selectedIndex];
-                    _saveRoutePreference(selected['name']); // NEW — Create/Update call
-                    context.push('/details', extra: {
-                      'destinationName': destinationName,
-                      'time': selected['time'],
-                      'distance': selected['distance'],
-                      'routeName': selected['name'],
-                    });
+                    await _saveRoutePreference(selected['name']);
+                    if (context.mounted) {
+                      context.push('/details', extra: {
+                        'destinationName': destinationName,
+                        'time': selected['time'],
+                        'distance': selected['distance'],
+                        'routeName': selected['name'],
+                      });
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryBlue,
