@@ -9,6 +9,7 @@ class DemoDataBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       label: 'Prototype notice. $message',
+      excludeSemantics: true,
       child: Card(
         color: Theme.of(context).colorScheme.secondaryContainer,
         child: Padding(
