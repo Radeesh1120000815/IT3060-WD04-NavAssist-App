@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../voice/services/haptic_service.dart';
 import 'data/emergency_contact.dart';
 import 'data/emergency_contact_repository.dart';
 import 'safety_routes.dart';
@@ -34,6 +36,8 @@ class _ManageEmergencyContactsScreenState
   Future<void> _setPrimary(EmergencyContact contact) async {
     try {
       await _repository.setPrimaryContact(contact.id);
+      if (!mounted) return;
+      await context.read<HapticService?>()?.vibrateLow();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${contact.name} is now the primary contact.')),

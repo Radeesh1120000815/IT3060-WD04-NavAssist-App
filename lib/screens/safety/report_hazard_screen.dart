@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../voice/services/haptic_service.dart';
 import 'data/hazard.dart';
 import 'data/hazard_repository.dart';
 import 'widgets/safety_widgets.dart';
@@ -123,6 +125,7 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
       _selectedCategory = category;
       _categoryError = null;
     });
+    context.read<HapticService?>()?.vibrateLow();
   }
 
   Future<void> _submit() async {
@@ -163,6 +166,8 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
           severity: category.automaticSeverity,
         );
       }
+      if (!mounted) return;
+      await context.read<HapticService?>()?.vibrateLow();
       if (!mounted) return;
       await showDialog<void>(
         context: context,
