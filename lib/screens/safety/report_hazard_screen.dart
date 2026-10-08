@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -138,6 +139,9 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
       return;
     }
 
+    final shouldSave = await _showReviewDialog(category);
+    if (!mounted || !shouldSave) return;
+
     setState(() => _isSaving = true);
     try {
       if (widget.isEditing) {
@@ -173,7 +177,11 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
         context: context,
         builder: (dialogContext) => AlertDialog(
           icon: const Icon(Icons.check_circle_outline, size: 40),
-          title: Text(widget.isEditing ? 'Report updated' : 'Report submitted'),
+          title: Text(
+            widget.isEditing
+                ? 'Hazard updated successfully'
+                : 'Hazard submitted successfully',
+          ),
           content: Text(
             widget.isEditing
                 ? '${category.label} was updated successfully.'
@@ -195,6 +203,54 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<bool> _showReviewDialog(HazardCategory category) async {
+    final note = _noteController.text.trim();
+    final location = _editingHazard?.locationName ?? _demoLocation;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Review hazard report'),
+        content: SingleChildScrollView(
+          child: Semantics(
+            label:
+                'Review hazard report. Category ${category.label}. Location $location. '
+                'Optional note ${note.isEmpty ? 'not provided' : note}. '
+                'Assigned severity ${category.automaticSeverity.displayLabel}.',
+            child: ExcludeSemantics(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _ReviewItem(label: 'Category', value: category.label),
+                  _ReviewItem(label: 'Location', value: location),
+                  _ReviewItem(
+                    label: 'Optional note',
+                    value: note.isEmpty ? 'No note provided' : note,
+                  ),
+                  _ReviewItem(
+                    label: 'Assigned severity',
+                    value: category.automaticSeverity.displayLabel,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Back to edit'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Confirm report'),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
   }
 
   @override
@@ -249,6 +305,21 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
                     ),
                   ),
                 ],
+                if (_selectedCategory case final category?) ...[
+                  const SizedBox(height: 8),
+                  Semantics(
+                    liveRegion: true,
+                    label:
+                        'Assigned severity: ${category.automaticSeverity.displayLabel}',
+                    child: ExcludeSemantics(
+                      child: Text(
+                        'Assigned severity: ${category.automaticSeverity.displayLabel}',
+                        style: Theme.of(context).textTheme.bodyLarge
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 20),
                 const SafetySectionTitle('Optional note'),
                 const SizedBox(height: 8),
@@ -284,7 +355,7 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
                         ),
                   label: Text(
                     _isSaving
-                        ? 'Saving report...'
+                        ? 'Saving hazard report...'
                         : widget.isEditing
                         ? 'Save changes'
                         : 'Submit report',
@@ -298,6 +369,32 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
                 ),
               ],
             ),
+    );
+  }
+}
+
+class _ReviewItem extends StatelessWidget {
+  const _ReviewItem({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 2),
+          Text(value),
+        ],
+      ),
     );
   }
 }
@@ -472,6 +569,15 @@ class _EditLoadError extends StatelessWidget {
 }
 
 String _friendlySaveError(Object error) {
+  if (error is FirebaseException) {
+    return switch (error.code) {
+      'permission-denied' => 'Permission denied. You do not have permission to save this hazard report.',
+      'unauthenticated' =>
+        'Authentication required. Sign in before saving this hazard report.',
+      'unavailable' || 'deadline-exceeded' || 'network-request-failed' => 'Network or Firestore unavailable. Check your connection and try again.',
+      _ => 'The hazard report could not be saved. Please try again.',
+    };
+  }
   if (error is HazardRepositoryException) return error.message;
-  return 'The report could not be saved. Check your connection and Firestore permissions.';
+  return 'Network or Firestore unavailable. Check your connection and try again.';
 }

@@ -32,6 +32,100 @@ void main() {
     await tester.pump();
 
     expect(find.text('Selected'), findsOneWidget);
+    expect(find.text('Assigned severity: Medium'), findsOneWidget);
+  });
+
+  testWidgets('Valid submit opens a review dialog before saving', (
+    tester,
+  ) async {
+    final repository = _FakeHazardRepository(const []);
+    await _pumpLarge(tester, ReportHazardScreen(repository: repository));
+
+    await _openReview(tester, category: 'Blocked path');
+
+    expect(find.text('Review hazard report'), findsOneWidget);
+    expect(find.text('Category'), findsOneWidget);
+    expect(find.text('Assigned severity'), findsOneWidget);
+    expect(find.text('High'), findsOneWidget);
+    expect(repository.createCalls, 0);
+  });
+
+  testWidgets('Back to edit closes review without saving', (tester) async {
+    final repository = _FakeHazardRepository(const []);
+    await _pumpLarge(tester, ReportHazardScreen(repository: repository));
+
+    await _openReview(tester, category: 'Pothole');
+    await tester.tap(find.text('Back to edit'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Review hazard report'), findsNothing);
+    expect(find.text('Assigned severity: Medium'), findsOneWidget);
+    expect(repository.createCalls, 0);
+  });
+
+  testWidgets('Confirm report saves the hazard', (tester) async {
+    final repository = _FakeHazardRepository(const []);
+    await _pumpLarge(tester, ReportHazardScreen(repository: repository));
+
+    await _openReview(tester, category: 'Construction');
+    await tester.tap(find.text('Confirm report'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(repository.createCalls, 1);
+    expect(repository.lastCreatedSeverity, HazardSeverity.high);
+  });
+
+  testWidgets('Failed save preserves category and optional note', (
+    tester,
+  ) async {
+    final repository = _FakeHazardRepository(
+      const [],
+      createError: const HazardRepositoryException(
+        'Permission denied. Unable to save this report.',
+      ),
+    );
+    await _pumpLarge(tester, ReportHazardScreen(repository: repository));
+
+    await tester.tap(find.text('Other').first);
+    await tester.pump();
+    final noteInput = find.byType(TextField);
+    await tester.ensureVisible(noteInput);
+    await tester.enterText(noteInput, 'Loose sign near the curb');
+    await tester.pump();
+    await tester.ensureVisible(find.text('Submit report'));
+    await tester.tap(find.text('Submit report'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm report'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Permission denied. Unable to save this report.'),
+      findsOneWidget,
+    );
+    expect(find.text('Assigned severity: Low'), findsOneWidget);
+    final noteField = tester.widget<TextField>(find.byType(TextField));
+    expect(noteField.controller?.text, 'Loose sign near the curb');
+    expect(repository.lastCreatedDescription, 'Loose sign near the curb');
+    expect(find.text('Submit report'), findsOneWidget);
+  });
+
+  testWidgets('Successful save shows clear success feedback', (tester) async {
+    await _pumpLarge(
+      tester,
+      ReportHazardScreen(repository: _FakeHazardRepository(const [])),
+    );
+
+    await _openReview(tester, category: 'Blocked path');
+    await tester.tap(find.text('Confirm report'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Hazard submitted successfully'), findsOneWidget);
+    expect(
+      find.text('Blocked path was saved to community hazards.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Hazard list shows its empty state', (tester) async {
@@ -148,13 +242,31 @@ Future<void> _pumpLarge(WidgetTester tester, Widget child) async {
   await tester.pumpWidget(MaterialApp(home: child));
 }
 
+Future<void> _openReview(
+  WidgetTester tester, {
+  required String category,
+}) async {
+  await tester.tap(find.text(category).first);
+  await tester.pump();
+  await tester.ensureVisible(find.text('Submit report'));
+  await tester.tap(find.text('Submit report'));
+  await tester.pumpAndSettle();
+}
+
 class _FakeHazardRepository implements HazardDataSource {
-  _FakeHazardRepository(this.hazards, {this.userId = 'owner'});
+  _FakeHazardRepository(
+    this.hazards, {
+    this.userId = 'owner',
+    this.createError,
+  });
 
   final List<Hazard> hazards;
   final String userId;
+  final Object? createError;
   int createCalls = 0;
   int deleteCalls = 0;
+  HazardSeverity? lastCreatedSeverity;
+  String? lastCreatedDescription;
 
   @override
   String get currentUserId => userId;
@@ -176,6 +288,9 @@ class _FakeHazardRepository implements HazardDataSource {
     required HazardSeverity severity,
   }) async {
     createCalls++;
+    lastCreatedSeverity = severity;
+    lastCreatedDescription = description;
+    if (createError case final error?) throw error;
     return 'new-hazard';
   }
 
