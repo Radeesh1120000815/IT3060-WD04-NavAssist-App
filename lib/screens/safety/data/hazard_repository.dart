@@ -50,7 +50,15 @@ class HazardRepository implements HazardDataSource {
       _firestore.collection(collectionName);
 
   @override
-  String get currentUserId => _auth.currentUser!.uid;
+  String get currentUserId {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw const HazardRepositoryException(
+        'Authentication required. Sign in before managing hazard reports.',
+      );
+    }
+    return user.uid;
+  }
 
   @override
   Stream<List<Hazard>> watchHazards() {

@@ -11,6 +11,12 @@ extension HazardSeverityDetails on HazardSeverity {
 
   String get firestoreValue => name;
 
+  String get displayLabel => switch (this) {
+    HazardSeverity.high => 'High',
+    HazardSeverity.medium => 'Medium',
+    HazardSeverity.low => 'Low',
+  };
+
   static HazardSeverity fromFirestore(Object? value) {
     return HazardSeverity.values.firstWhere(
       (severity) => severity.name == value,

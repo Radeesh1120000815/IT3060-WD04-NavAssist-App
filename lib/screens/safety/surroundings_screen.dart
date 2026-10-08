@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../voice/services/voice_service.dart';
 import 'landmark_info_screen.dart';
 import 'safety_routes.dart';
 import 'widgets/safety_widgets.dart';
@@ -22,12 +24,9 @@ class SurroundingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Nearby places: ${centralLibrary.name}, ${centralLibrary.distance}, ${centralLibrary.direction}. Main Street bus stop, 250 metres away, ahead on the right.',
-                ),
-              ),
+            onPressed: () => context.read<VoiceService>().speakInstruction(
+              'Nearby places. ${centralLibrary.name}, ${centralLibrary.distance}, ${centralLibrary.direction}. Main Street bus stop, 250 metres away, ahead on the right.',
+              type: AnnouncementType.general,
             ),
             icon: const Icon(Icons.volume_up_outlined),
             label: const Text('Speak / replay nearby places'),
