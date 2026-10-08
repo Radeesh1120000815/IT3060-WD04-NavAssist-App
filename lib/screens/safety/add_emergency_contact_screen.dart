@@ -108,7 +108,9 @@ class _AddEmergencyContactScreenState extends State<AddEmergencyContactScreen> {
         builder: (dialogContext) => AlertDialog(
           icon: const Icon(Icons.check_circle_outline, size: 40),
           title: Text(
-            widget.contact == null ? 'Contact saved' : 'Contact updated',
+            widget.contact == null
+                ? 'Contact added successfully'
+                : 'Contact updated successfully',
           ),
           content: Text(
             widget.contact == null

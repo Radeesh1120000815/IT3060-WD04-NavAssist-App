@@ -40,7 +40,11 @@ class _ManageEmergencyContactsScreenState
       await context.read<HapticService?>()?.vibrateLow();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${contact.name} is now the primary contact.')),
+        SnackBar(
+          content: Text(
+            'Primary contact changed successfully. ${contact.name} is now the primary contact.',
+          ),
+        ),
       );
     } on Object catch (error) {
       if (!mounted) return;
@@ -54,14 +58,24 @@ class _ManageEmergencyContactsScreenState
     }
   }
 
-  Future<void> _delete(EmergencyContact contact) async {
+  Future<void> _delete(
+    EmergencyContact contact, {
+    required bool isPrimary,
+    required EmergencyContact? replacement,
+  }) async {
+    final explanation = isPrimary
+        ? replacement == null
+              ? '${contact.name} will be removed. No emergency contacts will remain.'
+              : '${contact.name} will be removed. ${replacement.name} will automatically become the primary contact.'
+        : '${contact.name} will be removed from your emergency contacts.';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         icon: const Icon(Icons.delete_outline),
         title: const Text('Delete emergency contact?'),
-        content: Text(
-          '${contact.name} will be permanently removed. If this is the primary contact, another saved contact will become primary.',
+        content: Semantics(
+          label: 'Delete ${contact.name}. $explanation',
+          child: ExcludeSemantics(child: Text(explanation)),
         ),
         actions: [
           TextButton(
@@ -130,20 +144,40 @@ class _ManageEmergencyContactsScreenState
           final primaryId = explicitPrimary.isNotEmpty
               ? explicitPrimary.first.id
               : contacts.first.id;
+          final orderedContacts = [
+            ...contacts.where((contact) => contact.id == primaryId),
+            ...contacts.where((contact) => contact.id != primaryId),
+          ];
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-            itemCount: contacts.length,
+            itemCount: orderedContacts.length + 1,
             itemBuilder: (context, index) {
-              final contact = contacts[index];
+              if (index == 0) {
+                return const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    'Your primary contact is shown during SOS activation.',
+                  ),
+                );
+              }
+              final contact = orderedContacts[index - 1];
+              final isPrimary = contact.id == primaryId;
+              final replacement = orderedContacts
+                  .where((candidate) => candidate.id != contact.id)
+                  .firstOrNull;
               return _ContactManagementCard(
                 contact: contact,
-                isPrimary: contact.id == primaryId,
+                isPrimary: isPrimary,
                 onSetPrimary: () => _setPrimary(contact),
                 onEdit: () => context.push(
                   SafetyRoutes.editEmergencyContactPath(contact.id),
                   extra: contact,
                 ),
-                onDelete: () => _delete(contact),
+                onDelete: () => _delete(
+                  contact,
+                  isPrimary: isPrimary,
+                  replacement: replacement,
+                ),
               );
             },
           );

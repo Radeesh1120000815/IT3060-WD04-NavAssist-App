@@ -46,7 +46,7 @@ class EmergencyContactRepository implements EmergencyContactDataSource {
     final user = _auth.currentUser;
     if (user == null) {
       throw const EmergencyContactRepositoryException(
-        'Sign in before accessing emergency contacts.',
+        'Authentication required. Sign in before accessing emergency contacts.',
       );
     }
     return user.uid;
@@ -223,12 +223,12 @@ String emergencyContactErrorMessage(Object error, {required String operation}) {
   if (error is FirebaseException) {
     return switch (error.code) {
       'permission-denied' =>
-        'Firestore permission denied while trying to $operation contacts. Allow this signed-in user to access users/{uid}/emergency_contacts in the deployed rules.',
+        'Permission denied. You do not have permission to $operation emergency contacts.',
       'unauthenticated' =>
-        'Firebase authentication is required before contacts can be ${operation == 'load' ? 'loaded' : 'saved'}. Restart the preview and try again.',
+        'Authentication required. Sign in before emergency contacts can be ${operation == 'load' ? 'loaded' : 'saved'}.',
       'failed-precondition' =>
         'Firestore could not $operation contacts because its current configuration does not support this query.',
-      'unavailable' => 'Firestore is currently unavailable. Check the device connection and try again.',
+      'unavailable' || 'deadline-exceeded' || 'network-request-failed' => 'Network or Firestore unavailable. Check your connection and try again.',
       _ =>
         'Firestore could not $operation contacts (${error.code}). ${error.message ?? 'Try again.'}',
     };
