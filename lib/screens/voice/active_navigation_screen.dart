@@ -155,12 +155,8 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          // PLACEHOLDER: the real SOS button belongs to Member 3.
           FilledButton(
-            onPressed: () => showMessage(
-              context,
-              'SOS belongs to the Safety section and is not connected yet.',
-            ),
+            onPressed: () => context.push('/sos'), // Member 3's SOS / Emergency screen
             style: FilledButton.styleFrom(
               backgroundColor: p.danger,
               foregroundColor: Colors.white,
@@ -169,7 +165,7 @@ class _TopBar extends StatelessWidget {
             ),
             child: const Text(
               'SOS',
-              semanticsLabel: 'SOS emergency help, not connected yet',
+              semanticsLabel: 'SOS emergency help, opens the emergency assistance screen',
             ),
           ),
         ],
@@ -621,16 +617,15 @@ class _QuickButtons extends StatelessWidget {
         semanticLabel: 'Haptic alerts',
         onTap: () => context.push(VoiceRoutes.hapticAlerts),
       ),
-      // PLACEHOLDER: Nearby (Surroundings) belongs to Member 3.
+      
+      // Nearby opens Member 3's Surroundings screen.
       _QuickButton(
         icon: Icons.visibility,
         label: 'Nearby',
-        semanticLabel: 'Nearby, not connected yet',
-        onTap: () => showMessage(
-          context,
-          'Nearby belongs to the Safety section and is not connected yet.',
-        ),
+        semanticLabel: 'Nearby places. Opens the surroundings screen.',
+        onTap: () => context.push('/explore'),
       ),
+
       _QuickButton(
         icon: Icons.settings,
         label: 'Settings',

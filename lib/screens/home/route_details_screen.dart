@@ -154,25 +154,44 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                     const SizedBox(height: 8),
 
                     // Safety warning block
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.08),
-                        border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Icon(Icons.warning_amber, color: Colors.orange, size: 20),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Road crossing ahead · Construction area',
-                              style: TextStyle(fontSize: 12.5, color: Colors.black87),
+                    Semantics(
+                      button: true,
+                      excludeSemantics: true,
+                      label:
+                          'Road crossing ahead and construction area. Double tap to view community hazard reports.',
+                      child: GestureDetector(
+                        onTap: () => context.push('/hazards'),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.08),
+                            border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            children: const [
+                              Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Road crossing ahead · Construction area',
+                                      style: TextStyle(fontSize: 12.5, color: Colors.black87),
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      'Tap to view community reports',
+                                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.chevron_right, color: Colors.grey),
+                            ],
                             ),
                           ),
-                        ],
                       ),
                     ),
                   ],

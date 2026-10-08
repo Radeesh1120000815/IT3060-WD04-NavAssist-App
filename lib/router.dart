@@ -7,6 +7,7 @@ import 'screens/home/route_details_screen.dart';
 import 'screens/home/start_navigation_screen.dart';
 import 'screens/voice/voice_routes.dart';
 import 'screens/home/places_screen.dart';
+import 'screens/safety/safety_routes.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -31,6 +32,6 @@ final GoRouter appRouter = GoRouter(
       return StartNavigationScreen(destinationData: extra);
     }),
     ...voiceRoutes,
-    // Member 3 will add their own safety routes similarly
+    ...safetyRoutes,
   ],
 );
