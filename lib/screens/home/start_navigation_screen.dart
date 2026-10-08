@@ -219,11 +219,7 @@ class _StartNavigationScreenState extends State<StartNavigationScreen> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('SOS pressed (placeholder)')),
-                    );
-                  },
+                  onPressed: () => context.push('/sos'), // Member 3's SOS / Emergency screen
                   icon: const Icon(Icons.warning_amber, color: Colors.red),
                   label: const Text('SOS', style: TextStyle(color: Colors.red)),
                   style: OutlinedButton.styleFrom(
