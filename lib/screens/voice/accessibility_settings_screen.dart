@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart'
     show FirebaseFirestore, QuerySnapshot;
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -18,8 +19,12 @@ import 'widgets/voice_widgets.dart';
 /// Also: links to Haptic Alerts and Voice Command, the emergency contact
 /// card (placeholder, see below) and Reset to default.
 class AccessibilitySettingsScreen extends StatelessWidget {
-  const AccessibilitySettingsScreen({super.key});
-
+  const AccessibilitySettingsScreen({
+    super.key,
+     this.emergencyContactSection,
+  });
+  final Widget? emergencyContactSection;
+  
   Future<void> _reset(BuildContext context) async {
     final provider = context.read<VoiceSettingsProvider>();
     final ok = await confirmAction(
@@ -152,7 +157,9 @@ class _EmergencyContactPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = Firebase.apps.isEmpty
+        ? null
+        : FirebaseAuth.instance.currentUser?.uid;
 
     Widget card(String title, String detail, bool canAdd) {
       return Row(

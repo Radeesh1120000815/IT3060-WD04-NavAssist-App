@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
 class FirebaseService {
-  static final FirebaseFirestore _db = FirebaseFirestore.instance;
-
+  static FirebaseFirestore get _db => FirebaseFirestore.instance;
 
   // CREATE — add a new document to any collection
   static Future<String> addDocument(String collection, Map<String, dynamic> data) async {
@@ -81,6 +81,8 @@ class FirebaseService {
 
   // READ — live stream of recent searches, newest first, limited to 10
   static Stream<List<Map<String, dynamic>>> streamRecentSearches({int limit = 10}) {
+    if (Firebase.apps.isEmpty) return Stream.value(const []);
+
     return _db
         .collection('recent_searches')
         .orderBy('createdAt', descending: true)
