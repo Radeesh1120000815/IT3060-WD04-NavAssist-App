@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../voice/services/voice_service.dart';
 import 'widgets/safety_widgets.dart';
 
 class LandmarkData {
@@ -158,9 +160,9 @@ class LandmarkInfoScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           FilledButton.tonalIcon(
-            onPressed: () => _showPrototypeMessage(
-              context,
-              '$guidanceSummary Spoken guidance is a prototype and is not connected yet.',
+            onPressed: () => context.read<VoiceService>().speakInstruction(
+              '$guidanceSummary ${landmark.accessibilityInformation}',
+              type: AnnouncementType.general,
             ),
             icon: const Icon(Icons.volume_up_outlined),
             label: const Text('Speak / replay guidance'),

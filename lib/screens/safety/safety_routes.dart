@@ -10,6 +10,7 @@ import 'public_transport_screen.dart';
 import 'report_hazard_screen.dart';
 import 'sos_emergency_screen.dart';
 import 'surroundings_screen.dart';
+import 'safety_voice_scope.dart';
 
 class SafetyRoutes {
   SafetyRoutes._();
@@ -31,6 +32,13 @@ class SafetyRoutes {
 }
 
 final List<RouteBase> safetyRoutes = [
+  ShellRoute(
+    builder: (context, state, child) => SafetyVoiceScope(child: child),
+    routes: _safetyChildRoutes,
+  ),
+];
+
+final List<RouteBase> _safetyChildRoutes = [
   GoRoute(
     path: SafetyRoutes.explore,
     builder: (context, state) => const SurroundingsScreen(),

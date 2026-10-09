@@ -1,0 +1,37 @@
+import 'package:go_router/go_router.dart';
+import 'screens/home/home_screen.dart';
+import 'screens/home/search_screen.dart';
+import 'screens/home/results_screen.dart';
+import 'screens/home/route_options_screen.dart';
+import 'screens/home/route_details_screen.dart';
+import 'screens/home/start_navigation_screen.dart';
+import 'screens/voice/voice_routes.dart';
+import 'screens/home/places_screen.dart';
+import 'screens/safety/safety_routes.dart';
+
+final GoRouter appRouter = GoRouter(
+  initialLocation: '/',
+  routes: [
+    GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+    GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
+    GoRoute(path: '/places', builder: (context, state) => const PlacesScreen()),
+    GoRoute(path: '/results', builder: (context, state) {
+      final extra = state.extra as Map<String, dynamic>?;
+      return ResultsScreen(extra: extra);
+    }),
+    GoRoute(path: '/routes', builder: (context, state) {
+      final extra = state.extra as Map<String, dynamic>?;
+      return RouteOptionsScreen(extra: extra);
+    }),
+    GoRoute(path: '/details', builder: (context, state) {
+      final extra = state.extra as Map<String, dynamic>?;
+      return RouteDetailsScreen(extra: extra);
+    }),
+    GoRoute(path: '/navigate-start', builder: (context, state) {
+      final extra = state.extra as Map<String, dynamic>?;
+      return StartNavigationScreen(destinationData: extra);
+    }),
+    ...voiceRoutes,
+    ...safetyRoutes,
+  ],
+);

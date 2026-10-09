@@ -58,8 +58,11 @@ void main() {
       const VoiceSettings(highContrast: true, largeText: true),
     );
     await tester.pumpWidget(buildApp(settings));
+    await tester.pump();
 
     await tester.scrollUntilVisible(find.text('Reset to default'), 200);
+    await tester.drag(find.byType(ListView), const Offset(0, -80));
+    await tester.pump();
     await tester.tap(find.text('Reset to default'));
     await tester.pumpAndSettle();
 
@@ -83,8 +86,11 @@ void main() {
       const VoiceSettings(highContrast: true, largeText: true),
     );
     await tester.pumpWidget(buildApp(settings));
+    await tester.pump();
 
     await tester.scrollUntilVisible(find.text('Reset to default'), 200);
+    await tester.drag(find.byType(ListView), const Offset(0, -80));
+    await tester.pump();
     await tester.tap(find.text('Reset to default'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Reset'));

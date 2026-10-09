@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../voice/services/haptic_service.dart';
 import 'data/emergency_contact.dart';
 import 'data/emergency_contact_repository.dart';
 import 'safety_routes.dart';
@@ -38,6 +40,7 @@ class _SosEmergencyScreenState extends State<SosEmergencyScreen>
           _active = true;
           _holdStatus = null;
         });
+        context.read<HapticService?>()?.vibrateLow();
       });
   }
 
@@ -59,6 +62,7 @@ class _SosEmergencyScreenState extends State<SosEmergencyScreen>
       _holding = true;
       _holdStatus = null;
     });
+    context.read<HapticService?>()?.vibrateLow();
     _holdController.forward(from: 0);
   }
 
@@ -71,6 +75,7 @@ class _SosEmergencyScreenState extends State<SosEmergencyScreen>
       _holding = false;
       _holdStatus = 'Hold cancelled. Press and hold again when you are ready.';
     });
+    context.read<HapticService?>()?.vibrateLow();
   }
 
   void _cancelSos() {
@@ -80,6 +85,7 @@ class _SosEmergencyScreenState extends State<SosEmergencyScreen>
       _holding = false;
       _holdStatus = null;
     });
+    context.read<HapticService?>()?.vibrateLow();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(

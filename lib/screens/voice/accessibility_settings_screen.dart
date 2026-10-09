@@ -1,7 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart'
+    show FirebaseFirestore, QuerySnapshot;
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../safety/data/emergency_contact.dart';
 import 'data/voice_settings_provider.dart';
 import 'theme/voice_theme.dart';
 import 'voice_routes.dart';
@@ -14,8 +19,12 @@ import 'widgets/voice_widgets.dart';
 /// Also: links to Haptic Alerts and Voice Command, the emergency contact
 /// card (placeholder, see below) and Reset to default.
 class AccessibilitySettingsScreen extends StatelessWidget {
-  const AccessibilitySettingsScreen({super.key});
-
+  const AccessibilitySettingsScreen({
+    super.key,
+     this.emergencyContactSection,
+  });
+  final Widget? emergencyContactSection;
+  
   Future<void> _reset(BuildContext context) async {
     final provider = context.read<VoiceSettingsProvider>();
     final ok = await confirmAction(
@@ -139,55 +148,100 @@ class AccessibilitySettingsScreen extends StatelessWidget {
   }
 }
 
-/// PLACEHOLDER for the emergency contact card.
-///
-/// The contact lives in Member 3's `emergency_contacts` collection, and
-/// Member 3's code does not provide a way to read it yet. When it does,
-/// replace this with a read-only card. This screen never writes to
-/// emergency_contacts.
+/// Emergency contact card. READ-ONLY: it shows the contacts Member 3 stores
+/// at users/{uid}/emergency_contacts and opens Member 3's screens to add or
+/// manage them. This screen never writes to that collection.
 class _EmergencyContactPlaceholder extends StatelessWidget {
   const _EmergencyContactPlaceholder();
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return InfoCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final uid = Firebase.apps.isEmpty
+        ? null
+        : FirebaseAuth.instance.currentUser?.uid;
+
+    Widget card(String title, String detail, bool canAdd) {
+      return Row(
         children: [
-          Row(
-            children: [
-              Icon(Icons.person, color: p.primary, size: 32),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'No emergency contact set',
-                      style: TextStyle(
-                        color: p.text,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+          Icon(Icons.person, color: p.primary, size: 32),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Semantics(
+              label: '$title. $detail',
+              excludeSemantics: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: p.text,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
-                    Text(
-                      'Contacts are managed in the Safety section.',
-                      style: TextStyle(color: p.mutedText),
-                    ),
-                  ],
-                ),
+                  ),
+                  Text(detail, style: TextStyle(color: p.mutedText)),
+                ],
               ),
-              // Disabled until Member 3's screen exists.
-              const TextButton(onPressed: null, child: Text('Edit')),
-            ],
+            ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Editing will open the Safety section once it is added.',
-            style: TextStyle(color: p.mutedText, fontSize: 13),
+          TextButton(
+            onPressed: () => context.push(
+              canAdd ? '/emergency-contact/add' : '/emergency-contacts',
+            ),
+            style: TextButton.styleFrom(minimumSize: const Size(64, 48)),
+            child: Text(
+              canAdd ? 'Add' : 'Manage',
+              semanticsLabel: canAdd
+                  ? 'Add an emergency contact'
+                  : 'Manage emergency contacts',
+            ),
           ),
         ],
+      );
+    }
+
+    if (uid == null) {
+      return InfoCard(
+        child: card('Emergency contacts',
+            'Manage contacts in the Safety section.', false),
+      );
+    }
+
+    return InfoCard(
+      child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('emergency_contacts')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return card('Emergency contacts',
+                'Could not load contacts. Open the Safety section to manage them.',
+                false);
+          }
+          if (!snapshot.hasData) {
+            return card('Emergency contacts', 'Loading...', false);
+          }
+          final contacts = snapshot.data!.docs
+              .map((doc) => EmergencyContact.fromFirestore(doc))
+              .toList()
+            ..sort((a, b) {
+              if (a.isPrimary == b.isPrimary) return 0;
+              return a.isPrimary ? -1 : 1; // primary contact first
+            });
+
+          if (contacts.isEmpty) {
+            return card('No emergency contact set',
+                'Add one so SOS can reach someone you trust.', true);
+          }
+          final c = contacts.first;
+          final more =
+              contacts.length > 1 ? ' · +${contacts.length - 1} more' : '';
+          return card(c.name, '${c.relationship} · ${c.phone}$more', false);
+        },
       ),
     );
   }
