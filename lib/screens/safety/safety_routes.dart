@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'add_emergency_contact_screen.dart';
@@ -11,6 +12,7 @@ import 'report_hazard_screen.dart';
 import 'sos_emergency_screen.dart';
 import 'surroundings_screen.dart';
 import 'safety_voice_scope.dart';
+import 'theme/safety_theme.dart';
 
 class SafetyRoutes {
   SafetyRoutes._();
@@ -33,7 +35,10 @@ class SafetyRoutes {
 
 final List<RouteBase> safetyRoutes = [
   ShellRoute(
-    builder: (context, state, child) => SafetyVoiceScope(child: child),
+    builder: (context, state, child) => Theme(
+      data: SafetyTheme.applyTo(Theme.of(context)),
+      child: SafetyVoiceScope(child: child),
+    ),
     routes: _safetyChildRoutes,
   ),
 ];

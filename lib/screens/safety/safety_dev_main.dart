@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'safety_routes.dart';
+import 'theme/safety_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,14 +28,7 @@ class SafetyPreviewApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'NavAssist — Member 3 preview',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF155E75)),
-        useMaterial3: true,
-        materialTapTargetSize: MaterialTapTargetSize.padded,
-        inputDecorationTheme: const InputDecorationTheme(
-          border: OutlineInputBorder(),
-        ),
-      ),
+      theme: SafetyTheme.light,
       routerConfig: _safetyPreviewRouter,
     );
   }
