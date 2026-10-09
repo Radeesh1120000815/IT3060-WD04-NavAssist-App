@@ -16,6 +16,8 @@ class EmergencyContactRepositoryException implements Exception {
 abstract interface class EmergencyContactDataSource {
   Stream<List<EmergencyContact>> streamEmergencyContacts();
 
+  Future<EmergencyContact?> getEmergencyContact(String contactId);
+
   Future<String> createEmergencyContact({
     required String name,
     required String relationship,
@@ -73,6 +75,25 @@ class EmergencyContactRepository implements EmergencyContactDataSource {
     } on FirebaseException catch (error, stackTrace) {
       debugPrint(
         'Emergency contact read failed: ${error.plugin}/${error.code}: ${error.message}',
+      );
+      Error.throwWithStackTrace(
+        EmergencyContactRepositoryException(
+          emergencyContactErrorMessage(error, operation: 'load'),
+        ),
+        stackTrace,
+      );
+    }
+  }
+
+  @override
+  Future<EmergencyContact?> getEmergencyContact(String contactId) async {
+    final userId = _currentUserId;
+    try {
+      final document = await _contacts(userId).doc(contactId).get();
+      return document.exists ? EmergencyContact.fromFirestore(document) : null;
+    } on FirebaseException catch (error, stackTrace) {
+      debugPrint(
+        'Emergency contact load failed: ${error.plugin}/${error.code}: ${error.message}',
       );
       Error.throwWithStackTrace(
         EmergencyContactRepositoryException(

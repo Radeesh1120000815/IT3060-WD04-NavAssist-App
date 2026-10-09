@@ -78,6 +78,9 @@ Future<void> _pumpSos(WidgetTester tester) async {
 
 class _EmptyContactRepository implements EmergencyContactDataSource {
   @override
+  Future<EmergencyContact?> getEmergencyContact(String contactId) async => null;
+
+  @override
   Stream<List<EmergencyContact>> streamEmergencyContacts() =>
       Stream.value(const []);
 

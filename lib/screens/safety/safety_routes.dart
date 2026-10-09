@@ -90,6 +90,7 @@ final List<RouteBase> _safetyChildRoutes = [
   GoRoute(
     path: SafetyRoutes.editEmergencyContact,
     builder: (context, state) => AddEmergencyContactScreen(
+      contactId: state.pathParameters['contactId'],
       contact: state.extra is EmergencyContact
           ? state.extra! as EmergencyContact
           : null,

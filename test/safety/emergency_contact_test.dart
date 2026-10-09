@@ -191,7 +191,9 @@ void main() {
     expect(find.text('Manage contacts'), findsOneWidget);
   });
 
-  testWidgets('edit form loads contact and saves an update', (tester) async {
+  testWidgets('editing with route extra uses contact immediately', (
+    tester,
+  ) async {
     const contact = EmergencyContact(
       id: 'edit-me',
       name: 'Maya Perera',
@@ -213,11 +215,168 @@ void main() {
 
     expect(find.text('Edit emergency contact'), findsOneWidget);
     expect(find.text('Maya Perera'), findsWidgets);
+    expect(repository.loadCalls, 0);
     await tester.tap(find.text('Save changes'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(repository.updateCalls, 1);
     expect(find.text('Contact updated successfully'), findsOneWidget);
+  });
+
+  testWidgets('editing using only contactId loads the contact', (tester) async {
+    const contact = EmergencyContact(
+      id: 'load-me',
+      name: 'Nimal Perera',
+      relationship: 'Father',
+      phone: '0712345678',
+      isPrimary: false,
+      createdAt: null,
+      updatedAt: null,
+    );
+    final completer = Completer<EmergencyContact?>();
+    final repository = _FakeContactRepository(
+      Stream.value(const []),
+      loadContact: (_) => completer.future,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AddEmergencyContactScreen(
+          repository: repository,
+          contactId: contact.id,
+        ),
+      ),
+    );
+
+    expect(find.text('Edit emergency contact'), findsOneWidget);
+    expect(find.text('Loading emergency contact...'), findsOneWidget);
+    expect(find.text('Save contact'), findsNothing);
+
+    completer.complete(contact);
+    await tester.pumpAndSettle();
+
+    expect(repository.loadCalls, 1);
+    expect(find.text('Nimal Perera'), findsWidgets);
+    expect(find.text('Save changes'), findsOneWidget);
+  });
+
+  testWidgets('contactId edit shows Contact not found for a deleted contact', (
+    tester,
+  ) async {
+    final repository = _FakeContactRepository(Stream.value(const []));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AddEmergencyContactScreen(
+          repository: repository,
+          contactId: 'deleted-contact',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edit emergency contact'), findsOneWidget);
+    expect(find.text('Contact not found'), findsOneWidget);
+    expect(
+      find.text('This emergency contact may have been deleted.'),
+      findsOneWidget,
+    );
+    expect(find.text('Save contact'), findsNothing);
+  });
+
+  testWidgets('contactId edit shows a retryable load failure', (tester) async {
+    final repository = _FakeContactRepository(
+      Stream.value(const []),
+      loadError: const EmergencyContactRepositoryException(
+        'Network or Firestore unavailable. Check your connection and try again.',
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AddEmergencyContactScreen(
+          repository: repository,
+          contactId: 'network-error',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Could not load emergency contact'), findsOneWidget);
+    expect(
+      find.text(
+        'Network or Firestore unavailable. Check your connection and try again.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('Save contact'), findsNothing);
+  });
+
+  testWidgets('retry loads the contact after a temporary failure', (
+    tester,
+  ) async {
+    const contact = EmergencyContact(
+      id: 'retry-contact',
+      name: 'Amal Silva',
+      relationship: 'Friend',
+      phone: '0777654321',
+      isPrimary: false,
+      createdAt: null,
+      updatedAt: null,
+    );
+    final repository = _FakeContactRepository(
+      Stream.value(const []),
+      loadError: const EmergencyContactRepositoryException(
+        'Temporary load failure.',
+      ),
+      loadedContact: contact,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AddEmergencyContactScreen(
+          repository: repository,
+          contactId: contact.id,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Retry'), findsOneWidget);
+
+    repository.loadError = null;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    expect(repository.loadCalls, 2);
+    expect(find.text('Amal Silva'), findsWidgets);
+    expect(find.text('Save changes'), findsOneWidget);
+  });
+
+  testWidgets('loaded contact prefills all form values', (tester) async {
+    const contact = EmergencyContact(
+      id: 'prefill-contact',
+      name: 'Sahan Fernando',
+      relationship: 'Neighbour',
+      phone: '0761234567',
+      isPrimary: false,
+      createdAt: null,
+      updatedAt: null,
+    );
+    final repository = _FakeContactRepository(
+      Stream.value(const []),
+      loadedContact: contact,
+    );
+    await _pumpContactScreen(
+      tester,
+      AddEmergencyContactScreen(repository: repository, contactId: contact.id),
+    );
+    await tester.pumpAndSettle();
+
+    final fields = tester
+        .widgetList<TextFormField>(find.byType(TextFormField))
+        .toList();
+    expect(fields[0].controller?.text, 'Sahan Fernando');
+    expect(find.text('Other'), findsOneWidget);
+    expect(fields[1].controller?.text, 'Neighbour');
+    expect(fields[2].controller?.text, '0761234567');
+    expect(find.text('Save changes'), findsOneWidget);
   });
 
   testWidgets('failed add preserves all entered contact values', (
@@ -468,12 +627,23 @@ Future<void> _pumpContactScreen(WidgetTester tester, Widget screen) async {
 }
 
 class _FakeContactRepository implements EmergencyContactDataSource {
-  _FakeContactRepository(this.contacts, {this.createError, this.updateError});
+  _FakeContactRepository(
+    this.contacts, {
+    this.createError,
+    this.updateError,
+    this.loadedContact,
+    this.loadError,
+    this.loadContact,
+  });
 
   final Stream<List<EmergencyContact>> contacts;
   final Object? createError;
   final Object? updateError;
+  EmergencyContact? loadedContact;
+  Object? loadError;
+  final Future<EmergencyContact?> Function(String contactId)? loadContact;
   int createCalls = 0;
+  int loadCalls = 0;
   int updateCalls = 0;
   int deleteCalls = 0;
   int setPrimaryCalls = 0;
@@ -491,6 +661,14 @@ class _FakeContactRepository implements EmergencyContactDataSource {
 
   @override
   Stream<List<EmergencyContact>> streamEmergencyContacts() => contacts;
+
+  @override
+  Future<EmergencyContact?> getEmergencyContact(String contactId) async {
+    loadCalls++;
+    if (loadContact case final loader?) return loader(contactId);
+    if (loadError case final error?) throw error;
+    return loadedContact?.id == contactId ? loadedContact : null;
+  }
 
   @override
   Future<void> updateEmergencyContact({
