@@ -211,6 +211,7 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        scrollable: true,
         title: const Text('Review hazard report'),
         content: SingleChildScrollView(
           child: Semantics(

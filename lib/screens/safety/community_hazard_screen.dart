@@ -249,16 +249,28 @@ class _HazardCard extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  OutlinedButton.icon(
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined),
-                    label: const Text('Edit'),
+                  Semantics(
+                    button: true,
+                    label: 'Edit ${hazard.type} hazard report',
+                    excludeSemantics: true,
+                    child: OutlinedButton.icon(
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit_outlined),
+                      label: const Text('Edit'),
+                    ),
                   ),
-                  TextButton.icon(
-                    onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text('Delete'),
-                    style: TextButton.styleFrom(foregroundColor: colors.error),
+                  Semantics(
+                    button: true,
+                    label: 'Delete ${hazard.type} hazard report',
+                    excludeSemantics: true,
+                    child: TextButton.icon(
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Delete'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: colors.error,
+                      ),
+                    ),
                   ),
                 ],
               ),

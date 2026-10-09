@@ -49,6 +49,29 @@ void main() {
     await gesture.up();
   });
 
+  testWidgets('active simulated SOS can be cancelled', (tester) async {
+    await _pumpSos(tester);
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.text('Hold to activate SOS')),
+    );
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump(const Duration(milliseconds: 3100));
+    await tester.pump();
+    await gesture.up();
+
+    await tester.tap(find.text('Cancel SOS'));
+    await tester.pump();
+
+    expect(find.text('SOS activated'), findsNothing);
+    expect(find.text('Hold to activate SOS'), findsOneWidget);
+    expect(
+      find.text(
+        'Simulated SOS cancelled. No call, message, or location was sent.',
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('SOS hold control has a clear TalkBack label', (tester) async {
     final semantics = tester.ensureSemantics();
     await _pumpSos(tester);

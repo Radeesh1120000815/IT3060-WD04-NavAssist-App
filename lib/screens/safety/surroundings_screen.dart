@@ -162,7 +162,11 @@ class _PlaceFact extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [Icon(icon, size: 20), const SizedBox(width: 6), Text(text)],
+      children: [
+        Icon(icon, size: 20),
+        const SizedBox(width: 6),
+        Flexible(child: Text(text)),
+      ],
     );
   }
 }

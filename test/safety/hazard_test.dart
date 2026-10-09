@@ -141,6 +141,51 @@ void main() {
     expect(find.text('No hazards to show'), findsOneWidget);
   });
 
+  testWidgets('Hazard list shows authentication stream errors', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CommunityHazardScreen(
+          repository: _FakeHazardRepository(
+            const [],
+            watchError: const HazardRepositoryException(
+              'Authentication required. Sign in before viewing hazards.',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Could not load hazards'), findsOneWidget);
+    expect(
+      find.text('Authentication required. Sign in before viewing hazards.'),
+      findsOneWidget,
+    );
+    expect(find.text('Try again'), findsOneWidget);
+  });
+
+  testWidgets('Hazard list shows permission stream errors', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CommunityHazardScreen(
+          repository: _FakeHazardRepository(
+            const [],
+            watchError: const HazardRepositoryException(
+              'Permission denied. You cannot view community hazards.',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Could not load hazards'), findsOneWidget);
+    expect(
+      find.text('Permission denied. You cannot view community hazards.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('Owner hazard shows Edit and Delete actions', (tester) async {
     await _pumpHazards(tester, reporterId: 'owner');
 
@@ -258,11 +303,13 @@ class _FakeHazardRepository implements HazardDataSource {
     this.hazards, {
     this.userId = 'owner',
     this.createError,
+    this.watchError,
   });
 
   final List<Hazard> hazards;
   final String userId;
   final Object? createError;
+  final Object? watchError;
   int createCalls = 0;
   int deleteCalls = 0;
   HazardSeverity? lastCreatedSeverity;
@@ -272,7 +319,9 @@ class _FakeHazardRepository implements HazardDataSource {
   String get currentUserId => userId;
 
   @override
-  Stream<List<Hazard>> watchHazards() => Stream.value(hazards);
+  Stream<List<Hazard>> watchHazards() => watchError == null
+      ? Stream.value(hazards)
+      : Stream<List<Hazard>>.error(watchError!);
 
   @override
   Future<Hazard?> getHazard(String hazardId) async =>
