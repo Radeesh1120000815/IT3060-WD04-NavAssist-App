@@ -29,3 +29,11 @@ flutter run
 flutter build apk --release
 
 Output: `build/app/outputs/flutter-apk/app-release.apk`
+
+### Download the APK
+
+Download the NavAssist Android application from the [Releases](../../releases) page.
+
+**Latest release:** v1.0
+
+Download `app-release.apk` from the release assets and install it on a compatible Android device. You may need to allow installation from the file manager used to open the APK.
